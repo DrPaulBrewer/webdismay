@@ -27,6 +27,62 @@ To support more browsers, you may need to load this [polyfill for window.fetch](
 
 Not ready yet.  See source code. 
 
+##Examples 
+
+App code:
+
+```js
+import 'whatwg-fetch'; // polyfills window.fetch
+import * as W from 'webdismay'; // Promises interface to webdis fetch:post to "/" 
+```
+
+Playing around with some basic functions in a chrome browser dev window:
+
+```js
+con = (x)=>console.log(x);
+new W.Key("test123").set('hello, there').then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 [true, "OK"]
+t = new W.Key("test123");
+--> Key {k: "test123", endPoint: "/"}
+t.get().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 hello, there
+t.incr().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 [false, "ERR value is not an integer or out of range"]
+t.set(1).then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 [true, "OK"]
+t.get().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 1
+t.incrBy(1).then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 [false, "ERR wrong number of arguments for 'incr' command"]
+t.incr().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 2
+t.incr().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 3
+t.incr().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 4
+new W.Generic().keysMatching("*").then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 ["foo", "test123", "paul-1", "hello"]
+new W.Generic().keysMatching("").then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 []
+new W.Generic().keysMatching().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 ["foo", "test123", "paul-1", "hello"]
+new W.Generic().keysMatching("*e*").then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 ["test123", "hello"]
+```
+
 ##Copyright
 
 Copyright 2016 Paul Brewer, Economic and Financial Technology Consulting LLC
