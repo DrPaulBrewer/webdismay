@@ -27,7 +27,13 @@ To support more browsers, you may need to load this [polyfill for window.fetch](
 
 Not ready yet.  See source code. 
 
-##Examples 
+##Example
+
+Back-end pre-requisites: 
+* redis
+* webdis
+
+See webdis docs for a quick docker-based solution for getting a dev stack up.
 
 App code:
 
