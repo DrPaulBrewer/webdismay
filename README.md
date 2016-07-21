@@ -8,7 +8,7 @@ Access webdis/redis functionality and models from the browser-side via `Promises
 
 * This is an early, untested, pre-release.  
 * There is a generic request function that should return a `Promise` for data from most webdis-supported functionality.
-* Classes exist for key-based commands (KeyAt) and key-based hashes (HashAt) 
+* Classes exist for key-based commands (Key) and key-based hashes (Hash) 
 * Currently unimplemented in any classes are sort, scan, bitwise operations, sets, sorted sets, lists, hyperloglog.
 * My time to develop this fully may be limited; I am tinkering with this primarily as a placeholder for an API.  
 * Code contributions or offers to take over this project are encouraged, file an issue to discuss.
