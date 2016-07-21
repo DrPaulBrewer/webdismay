@@ -131,7 +131,7 @@ export class Generic {
     
 }
     
-export class KeyAt {
+export class Key {
     constructor(k, endPoint="/"){
         this.k = k;
         this.endPoint = endPoint;
@@ -268,7 +268,7 @@ export class KeyAt {
 
 }
 
-export class HashAt {
+export class Hash {
     constructor(k, endPoint="/"){ 
         this.k = k;
         this.endPoint = endPoint;

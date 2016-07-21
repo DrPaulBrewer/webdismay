@@ -175,17 +175,17 @@ var Generic = exports.Generic = function () {
     return Generic;
 }();
 
-var KeyAt = exports.KeyAt = function () {
-    function KeyAt(k) {
+var Key = exports.Key = function () {
+    function Key(k) {
         var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
 
-        _classCallCheck(this, KeyAt);
+        _classCallCheck(this, Key);
 
         this.k = k;
         this.endPoint = endPoint;
     }
 
-    _createClass(KeyAt, [{
+    _createClass(Key, [{
         key: "r",
         value: function r(cmd) {
             var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
@@ -348,20 +348,20 @@ var KeyAt = exports.KeyAt = function () {
         }
     }]);
 
-    return KeyAt;
+    return Key;
 }();
 
-var HashAt = exports.HashAt = function () {
-    function HashAt(k) {
+var Hash = exports.Hash = function () {
+    function Hash(k) {
         var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
 
-        _classCallCheck(this, HashAt);
+        _classCallCheck(this, Hash);
 
         this.k = k;
         this.endPoint = endPoint;
     }
 
-    _createClass(HashAt, [{
+    _createClass(Hash, [{
         key: "r",
         value: function r(cmd) {
             var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
@@ -432,5 +432,5 @@ var HashAt = exports.HashAt = function () {
         }
     }]);
 
-    return HashAt;
+    return Hash;
 }();
