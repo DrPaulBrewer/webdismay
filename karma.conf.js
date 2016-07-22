@@ -1,4 +1,4 @@
-B// Karma configuration -- hand edited
+// Karma configuration -- hand edited
 
 module.exports = function(config) {
   config.set({
