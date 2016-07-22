@@ -1,4 +1,4 @@
-// Karma configuration -- hand edited
+B// Karma configuration -- hand edited
 
 module.exports = function(config) {
   config.set({
@@ -44,7 +44,10 @@ module.exports = function(config) {
  
 
     proxies : {
-      '/': 'http://127.0.0.1:7379/'
+      '/': {
+	  'target': 'http://127.0.0.1:7379/',
+	  'changeOrigin': true
+      }
     },
 
 
