@@ -40,7 +40,7 @@ module.exports = function(config) {
     port: 8080,
     runnerPort: 9100,
     colors: true,
-    logLevel: config.LOG_INFO,
+    logLevel: config.LOG_DEBUG,
  
 
     proxies : {
