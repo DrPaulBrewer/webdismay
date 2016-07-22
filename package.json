@@ -54,7 +54,6 @@
       "test": "test"
     },
     "dependencies": {
-      "qunit": "github:jquery/qunit@^2.0.0",
       "whatwg-fetch": "npm:whatwg-fetch@^1.0.0"
     },
     "devDependencies": {

@@ -1,8 +1,8 @@
 /* eslint no-console:off, newline-per-chained-call:off */
+/* globals QUnit:true */
 
 import 'whatwg-fetch';
 import * as W from "../src/index.js";
-import {QUnit} from 'qunit';
 
 QUnit.test("Webdismay W exists", function(assert){
     assert.expect(1);
