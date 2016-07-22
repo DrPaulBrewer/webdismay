@@ -54,7 +54,7 @@ QUnit.test("set key test345 to 57 and check it", function(assert){
      .then(function(){
          t.get().then(
              function(result){
-                 assert.ok(result===57);
+                 assert.ok(result===57, 'get result should equal the set value, 57');
                  return result;
              }
          ).then(done,done);

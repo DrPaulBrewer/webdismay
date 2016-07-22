@@ -38,7 +38,6 @@ module.exports = function(config) {
     urlRoot: '/__karma__/',
 
     port: 8080,
-    runnerPort: 9100,
     colors: true,
     logLevel: config.LOG_DEBUG,
  
