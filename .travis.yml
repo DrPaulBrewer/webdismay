@@ -21,3 +21,8 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - karma start --browsers Firefox --single-run
+after_script:
+  - docker logs red
+  - docker logs blue
+  - docker kill red blue
+  - docker rm red blue
