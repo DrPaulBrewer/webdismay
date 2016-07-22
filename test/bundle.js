@@ -1172,7 +1172,7 @@ $__System.register("1", ["3", "15"], function (_export) {
                 assert.ok(false, "should fail");
             });
 
-            QUnit.test("local CSV create", function (assert) {
+            QUnit.test("set Key test123 to 42", function (assert) {
                 assert.expect(1);
                 var done = assert.async();
                 new W.Key('test123').set(42)["catch"](function (e) {
