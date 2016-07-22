@@ -91,6 +91,22 @@ new W.Generic().keysMatching("*e*").then(con);
 --> VM796:1 ["test123", "hello"]
 ```
 
+Automagical JSON serialization/de-serialization is planned, but isn't quite ready,
+nor is there a boolean switch for it yet, and it seems there should be. 
+
+```
+t.set([{why:'me'},[42,666],"Donald"]); // this won't work yet because of our internal Array.concat before serialization
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+t.get().then(con); 
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 4  // see!
+t.set(JSON.stringify([{why:'me'},[42,666],"Donald"]));  // this will decode to an object, but are we sure the developer wants that?
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+t.get().then(con);
+--> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
+--> VM796:1 [{"why":"me"},[42,666],"Donald"]  // automagically decoded to object, not string, with internal .then resolvers
+```
+
 ##Copyright
 
 Copyright 2016 Paul Brewer, Economic and Financial Technology Consulting LLC
