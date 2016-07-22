@@ -38,6 +38,8 @@ module.exports = function(config) {
     // web server port
     port: 9876,
 
+    urlRoot : '/__karma__/',
+
     proxies : {
       '/': 'http://localhost:7379'
     },
