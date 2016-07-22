@@ -194,7 +194,7 @@ export class Key {
     }
 
     incrBy(increment){ 
-        return this.r('INCR',increment);
+        return this.r('INCRBY',increment);
     }
 
     incrByFloat(increment){ 
