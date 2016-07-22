@@ -73,7 +73,7 @@ module.exports = function(config) {
     browsers: ['Firefox'],
 
     browserNoActivityTimeout: 60000,
-
+    browserDisconnectTolerance: 10,
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
