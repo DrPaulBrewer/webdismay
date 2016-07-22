@@ -22,6 +22,10 @@ QUnit.test("local CSV create", function(assert){
     (new W
      .Key('test123')
      .set(42)
+     .catch(function(e){
+	 assert.ok(false, 'promise resolved to error:'+e);
+	 done();
+     })
      .then(function(result){
          assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
          done();
