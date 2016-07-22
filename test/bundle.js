@@ -735,9 +735,6 @@ $__System.register("15", ["7", "8", "14"], function (_export) {
 
     function request(command) {
         var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
-	
-	console.log("Monkeying with the test bundle.... ");
-	console.log("fetch is a "+typeof(fetch));
 
         return fetch(endPoint, {
             credentials: 'same-origin',
@@ -1176,17 +1173,31 @@ $__System.register("1", ["3", "15"], function (_export) {
                 assert.ok(typeof window.fetch === 'function', "window.fetch is a function");
             });
 
-            QUnit.test("set Key test123 to 42", function (assert) {
+            QUnit.test("set Key test123 to 42 without testing", function (assert) {
                 assert.expect(1);
                 var done = assert.async();
-                new W.Key('test123').set(42)["catch"](function (e) {
-                    console.log("promise threw error caught in catch:" + e);
-                    assert.ok(false, 'promise resolved to error:' + e);
-                    done();
-                }).then(function (result) {
+                new W.Key('test123').set(42).then(function (result) {
                     assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
-                    done();
-                });
+                    return result;
+                }, function (e) {
+                    assert.ok(false, e);
+                    return e;
+                }).then(done, done);
+            });
+
+            QUnit.test("set key test345 to 57 and check it", function (assert) {
+                assert.expect(2);
+                var done = assert.async(1);
+                var t = new W.Key('test345');
+                t.set(57).then(function (result) {
+                    assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
+                    return result;
+                }).then(function () {
+                    t.get().then(function (result) {
+                        assert.ok(result === 57);
+                        return result;
+                    }).then(done, done);
+                }, done);
             });
         }
     };
