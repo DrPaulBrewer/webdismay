@@ -15,6 +15,10 @@ QUnit.test("W has Key, Hash constructors",function(assert){
     assert.ok( (typeof W.Hash ==="function"), "W.Hash");
 });
 
+QUnit.test("this test intentionally fails", function(assert){
+    assert.expect(1);
+    assert.ok(false, "should fail");
+});
 
 QUnit.test("local CSV create", function(assert){
     assert.expect(1);
@@ -23,8 +27,8 @@ QUnit.test("local CSV create", function(assert){
      .Key('test123')
      .set(42)
      .catch(function(e){
-	 assert.ok(false, 'promise resolved to error:'+e);
-	 done();
+         assert.ok(false, 'promise resolved to error:'+e);
+         done();
      })
      .then(function(result){
          assert.ok(result && result[0], 'promise resolved to array with true as 1st element');

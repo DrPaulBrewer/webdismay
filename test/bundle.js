@@ -1167,10 +1167,18 @@ $__System.register("1", ["3", "15"], function (_export) {
                 assert.ok(typeof W.Hash === "function", "W.Hash");
             });
 
+            QUnit.test("this test intentionally fails", function (assert) {
+                assert.expect(1);
+                assert.ok(false, "should fail");
+            });
+
             QUnit.test("local CSV create", function (assert) {
                 assert.expect(1);
                 var done = assert.async();
-                new W.Key('test123').set(42).then(function (result) {
+                new W.Key('test123').set(42)["catch"](function (e) {
+                    assert.ok(false, 'promise resolved to error:' + e);
+                    done();
+                }).then(function (result) {
                     assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
                     done();
                 });
