@@ -35,10 +35,13 @@ module.exports = function(config) {
     reporters: ['verbose'],
 
 
-    // web server port
-    port: 9876,
-
     urlRoot : '/__karma__/',
+
+    port: 8080,
+    runnerPort: 9100,
+    colors: true,
+    logLevel: config.LOG_INFO,
+ 
 
     proxies : {
       '/': 'http://127.0.0.1:7379/'

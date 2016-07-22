@@ -11,8 +11,10 @@ before_script:
   - npm i karma-firefox-launcher -D
   - npm i karma-verbose-reporter -D
   - docker run -v /tmp/data:/data --name "red" -d redis redis-server --appendonly yes
-  - docker run -d -p 7379:7379 --link red:redis anapsix/webdis
+  - docker run -d -p 7379:7379 --name "blue" --link red:redis anapsix/webdis
   - sleep 30
+  - docker logs red
+  - docker logs blue
   - curl http://127.0.0.1:7379/SET/hello/world
   - curl http://127.0.0.1:7379/GET/hello
   - export DISPLAY=:99.0
