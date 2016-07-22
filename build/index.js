@@ -192,7 +192,7 @@ var Key = exports.Key = function () {
                 cmdparams[_key2] = arguments[_key2];
             }
 
-            cmdparams.splice(1, this.k);
+            cmdparams.splice(1, 0, this.k);
             return request(cmdparams, this.endPoint);
         }
     }, {

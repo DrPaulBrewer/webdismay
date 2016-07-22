@@ -138,7 +138,7 @@ export class Key {
     }
 
     r(...cmdparams){
-	cmdparams.splice(1,this.k);
+	cmdparams.splice(1,0,this.k);
         return request(cmdparams, this.endPoint);
     }
     
