@@ -15,9 +15,11 @@ Access webdis/redis functionality and models from the browser-side via `Promises
 
 ##Access Control
 
-The only access controls are those provided by [webdis ACL](https://github.com/nicolasff/webdis#acl) and [redis security](http://redis.io/topics/security), which may require additional work to set up or
-simply be insufficient for some applications (e.g. money and e-commerce, pacemakers, nuclear weapons).  When run completely open, anyone can delete the entire database, read any data, or write or alter 
-any data.  You must accept all responsibility and consequences for using this software or including it in your work on other systems.  
+The only access controls are those provided by [webdis ACL](https://github.com/nicolasff/webdis#acl) and [redis security](http://redis.io/topics/security),
+which may require additional work to set up or simply be insufficient for some applications (e.g. public facing sites,
+money and e-commerce, pacemakers, nuclear weapons).  When run completely open, anyone can delete the entire database, 
+read any data, or write or alter  any data.  You must accept all responsibility and consequences for using this software
+or including it in your work on other systems.  
 
 ##window.fetch Polyfill Recommended
 
