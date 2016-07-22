@@ -137,10 +137,9 @@ export class Key {
         this.endPoint = endPoint;
     }
 
-    r(cmd, ...params){ 
-        return request(
-            [cmd, this.k].concat(params),
-            this.endPoint);
+    r(...cmdparams){
+	cmdparams.splice(1,this.k);
+        return request(cmdparams, this.endPoint);
     }
     
     append(v){ 

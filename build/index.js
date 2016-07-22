@@ -187,10 +187,13 @@ var Key = exports.Key = function () {
 
     _createClass(Key, [{
         key: "r",
-        value: function r(cmd) {
-            var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+        value: function r() {
+            for (var _len2 = arguments.length, cmdparams = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                cmdparams[_key2] = arguments[_key2];
+            }
 
-            return request([cmd, this.k].concat(params), this.endPoint);
+            cmdparams.splice(1, this.k);
+            return request(cmdparams, this.endPoint);
         }
     }, {
         key: "append",
@@ -238,7 +241,7 @@ var Key = exports.Key = function () {
     }, {
         key: "getRange",
         value: function getRange(starts, ends) {
-            return this.r('GETRANGE', [starts, ends]);
+            return this.r('GETRANGE', starts, ends);
         }
     }, {
         key: "getSet",
@@ -258,7 +261,7 @@ var Key = exports.Key = function () {
     }, {
         key: "incrBy",
         value: function incrBy(increment) {
-            return this.r('INCR', increment);
+            return this.r('INCRBY', increment);
         }
     }, {
         key: "incrByFloat",
@@ -288,7 +291,7 @@ var Key = exports.Key = function () {
     }, {
         key: "pSetEx",
         value: function pSetEx(ms, v) {
-            return this.r('PSETEX', [ms, v]);
+            return this.r('PSETEX', ms, v);
         }
     }, {
         key: "pTTL",
@@ -309,7 +312,7 @@ var Key = exports.Key = function () {
     }, {
         key: "restore",
         value: function restore(ttl, sval) {
-            return this.r('RESTORE', [ttl, sval]);
+            return this.r('RESTORE', ttl, sval);
         }
     }, {
         key: "set",
@@ -319,7 +322,7 @@ var Key = exports.Key = function () {
     }, {
         key: "setEx",
         value: function setEx(sec, v) {
-            return this.r('SETEX', [sec, v]);
+            return this.r('SETEX', sec, v);
         }
     }, {
         key: "setnx",
