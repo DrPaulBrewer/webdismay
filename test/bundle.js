@@ -735,6 +735,9 @@ $__System.register("15", ["7", "8", "14"], function (_export) {
 
     function request(command) {
         var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
+	
+	console.log("Monkeying with the test bundle.... ");
+	console.log("fetch is a "+typeof(fetch));
 
         return fetch(endPoint, {
             credentials: 'same-origin',
