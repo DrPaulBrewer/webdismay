@@ -35,7 +35,7 @@ module.exports = function(config) {
     reporters: ['verbose'],
 
 
-    urlRoot : '/__karma__/',
+    urlRoot: '/__karma__/',
 
     port: 8080,
     runnerPort: 9100,
@@ -43,13 +43,17 @@ module.exports = function(config) {
     logLevel: config.LOG_DEBUG,
  
 
-    proxies : {
+    proxies: {
       '/': {
 	  'target': 'http://127.0.0.1:7379/',
 	  'changeOrigin': true
       }
     },
 
+
+    client:{
+	captureConsole: true
+    },
 
     // enable / disable colors in the output (reporters and logs)
     colors: true,
