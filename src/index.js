@@ -137,7 +137,7 @@ export class Key {
         this.endPoint = endPoint;
     }
 
-    r(cmd, params=[]){ 
+    r(cmd, ...params){ 
         return request(
             [cmd, this.k].concat(params),
             this.endPoint);
@@ -178,7 +178,7 @@ export class Key {
     }
 
     getRange(starts,ends){ 
-        return this.r('GETRANGE',[starts,ends]);
+        return this.r('GETRANGE',starts,ends);
     }
     
     getSet(v){ 
@@ -218,7 +218,7 @@ export class Key {
     }
 
     pSetEx(ms,v){ 
-        return this.r('PSETEX',[ms,v]);
+        return this.r('PSETEX',ms,v);
     }
 
     pTTL(){ 
@@ -235,7 +235,7 @@ export class Key {
     // need .then clause for RENAMENX to adjust this.k conditionally 
 
     restore(ttl,sval){ 
-        return this.r('RESTORE',[ttl,sval]);
+        return this.r('RESTORE',ttl,sval);
     }
 
     set(v){ 
@@ -243,7 +243,7 @@ export class Key {
     }
 
     setEx(sec,v){ 
-        return this.r('SETEX',[sec,v]);
+        return this.r('SETEX',sec,v);
     }
 
     setnx(v){ 
