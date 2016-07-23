@@ -37,7 +37,7 @@ module.exports = function(config) {
 
     urlRoot: '/__karma__/',
 
-    port: 8080,
+    port: 7777,
     colors: true,
     logLevel: config.LOG_DEBUG,
  
@@ -45,7 +45,7 @@ module.exports = function(config) {
     proxies: {
       '/': {
 	  'target': 'http://127.0.0.1:7379/',
-	  'changeOrigin': true
+	  'changeOrigin': false
       }
     },
 
@@ -69,7 +69,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Firefox'],
+    browsers: ['Firefox', 'PhantomJS'],
 
     browserNoActivityTimeout: 60000,
     browserDisconnectTolerance: 10,

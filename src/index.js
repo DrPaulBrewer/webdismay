@@ -12,46 +12,58 @@ function stringifyObjects(x){
     return (typeof(x)==="object")? JSON.stringify(x): x;
 }
 
-function tryParseObjects(obj){
-    if (typeof(obj)==="object"){
-        const mykeys = Object.keys(obj);
-        for(let i=0,l=mykeys.length;i<l;++i){
-            let k = mykeys[i];
-            let v = obj[k];
-            if (typeof(v)==='string'){
-                try { 
-                    obj[k] = JSON.parse(v);
-                } catch(e){ 
-                    obj[k] = v;
-                }
-            }
+function tryParseObjects(x){
+    const type = typeof(x);
+    if (type==='number') return x;
+    if (type==='string') {
+        let result=x;
+        try {
+            result = JSON.parse(x);
+        } catch(e){
+            result = x;
         }
+        return result;
     }
-    return obj;
+    const mykeys = Object.keys(x);
+    for(let i=0,l=mykeys.length;i<l;++i){
+        let k = mykeys[i];
+        let v = tryParseObjects(x[k]);
+        x[k] = v;
+    }
+    return x;
 }
 
 /**
  * send a command array to webdis, return a Promise of a javascript object response.
- * Put each redis command parameter in its own slot in the command array, ideally it will be automatically stringified and encoded by webdisPromise as needed.  The response is JSON parsed 
+ * Put each redis command parameter in its own slot in the command array, ideally it will be automatically stringified and encoded as needed.  The response is JSON parsed 
  * @param {Array} command Array of command parameters.
  * @param {string} [endPoint="/"] endpoint URL for POST to webdis
  * @return {Object} Promise that resolves to webdis requested data or status
  */
 
+let method = "POST";
+
+export function setMethod(m){
+    method = m;
+}
+
 export function request(command, endPoint="/"){
-    return (fetch(endPoint, {
+    const commandURL =  (command
+                         .map(stringifyObjects)
+                         .map(encodeURIComponent)
+                         .join("/")
+                        );
+    const options = {
+        method,
         credentials: 'same-origin',
-        method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
-        },
-        body: (command
-               .map(stringifyObjects)
-               .map(encodeURIComponent)
-               .join("/")
-              )
-    }).then(checkStatus)
+        }
+    };
+    if (method === "POST") options.body = commandURL;
+    const webdisPromise =  (method === "GET")? fetch(endPoint+commandURL, options) : fetch(endPoint,options);
+    return (webdisPromise.then(checkStatus)
             .then((response)=>response.json())
             .then((data)=>data[command[0]])
             .then(tryParseObjects)
@@ -138,7 +150,7 @@ export class Key {
     }
 
     r(...cmdparams){
-	cmdparams.splice(1,0,this.k);
+        cmdparams.splice(1,0,this.k);
         return request(cmdparams, this.endPoint);
     }
     

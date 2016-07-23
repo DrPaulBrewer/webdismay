@@ -1,8 +1,12 @@
 /* eslint no-console:off, newline-per-chained-call:off */
 /* globals QUnit:true */
 
+import 'es5-shim';
+import 'es6-shim';
 import 'whatwg-fetch';
 import * as W from "../src/index.js";
+
+W.setMethod("GET"); // there might be an issue with http-proxy and POST as run by karma test runner
 
 QUnit.test("Webdismay W exists", function(assert){
     assert.expect(1);
@@ -41,6 +45,46 @@ QUnit.test("set Key test123 to 42 without testing", function(assert){
     );
 });
 
+QUnit.test("set Key test123 to 78 without testing", function(assert){
+    assert.expect(1);
+    const done = assert.async();
+    (new W
+     .Key('test123')
+     .set(78)
+     .then(
+         function(result){
+             assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
+             return result;
+         },
+         function(e){
+             assert.ok(false, e);
+             return e;
+         }
+     )
+     .then(done,done)
+    );
+});
+
+QUnit.test("set Key test123 to 2 without testing", function(assert){
+    assert.expect(1);
+    const done = assert.async();
+    (new W
+     .Key('test123')
+     .set(2)
+     .then(
+         function(result){
+             assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
+             return result;
+         },
+         function(e){
+             assert.ok(false, e);
+             return e;
+         }
+     )
+     .then(done,done)
+    );
+});
+
 
 QUnit.test("set key test345 to 57 and check it", function(assert){
     assert.expect(2);
@@ -52,9 +96,10 @@ QUnit.test("set key test345 to 57 and check it", function(assert){
          return result;
      })
      .then(function(){
+         console.log("about to call t.get() ");
          t.get().then(
              function(result){
-                 assert.ok(result===57, 'get result should equal the set value, 57');
+                 assert.ok(result===57, 'get result should equal the set value, 57, got:'+result);
                  return result;
              }
          ).then(done,done);

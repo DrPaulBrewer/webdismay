@@ -5,11 +5,6 @@ node_js:
 services:
   - docker
 before_script:
-  - npm i karma -D
-  - npm i karma-cli -D
-  - npm i karma-qunit -D
-  - npm i karma-firefox-launcher -D
-  - npm i karma-verbose-reporter -D
   - docker run -v /tmp/data:/data --name "red" -d redis redis-server --appendonly yes
   - docker run -d -p 7379:7379 --name "blue" --link red:redis anapsix/webdis
   - sleep 30
@@ -20,7 +15,7 @@ before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 script:
-  - karma start --browsers Firefox --single-run
+  - karma start --browsers PhantomJS Firefox --single-run
 after_script:
   - docker logs red
   - docker logs blue

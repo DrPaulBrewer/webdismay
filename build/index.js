@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -8,6 +8,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+exports.setMethod = setMethod;
 exports.request = request;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -22,47 +23,59 @@ function checkStatus(response) {
 }
 
 function stringifyObjects(x) {
-    return (typeof x === "undefined" ? "undefined" : _typeof(x)) === "object" ? JSON.stringify(x) : x;
+    return (typeof x === 'undefined' ? 'undefined' : _typeof(x)) === "object" ? JSON.stringify(x) : x;
 }
 
-function tryParseObjects(obj) {
-    if ((typeof obj === "undefined" ? "undefined" : _typeof(obj)) === "object") {
-        var mykeys = Object.keys(obj);
-        for (var i = 0, l = mykeys.length; i < l; ++i) {
-            var k = mykeys[i];
-            var v = obj[k];
-            if (typeof v === 'string') {
-                try {
-                    obj[k] = JSON.parse(v);
-                } catch (e) {
-                    obj[k] = v;
-                }
-            }
+function tryParseObjects(x) {
+    var type = typeof x === 'undefined' ? 'undefined' : _typeof(x);
+    if (type === 'number') return x;
+    if (type === 'string') {
+        var result = x;
+        try {
+            result = JSON.parse(x);
+        } catch (e) {
+            result = x;
         }
+        return result;
     }
-    return obj;
+    var mykeys = Object.keys(x);
+    for (var i = 0, l = mykeys.length; i < l; ++i) {
+        var k = mykeys[i];
+        var v = tryParseObjects(x[k]);
+        x[k] = v;
+    }
+    return x;
 }
 
 /**
  * send a command array to webdis, return a Promise of a javascript object response.
- * Put each redis command parameter in its own slot in the command array, ideally it will be automatically stringified and encoded by webdisPromise as needed.  The response is JSON parsed 
+ * Put each redis command parameter in its own slot in the command array, ideally it will be automatically stringified and encoded as needed.  The response is JSON parsed 
  * @param {Array} command Array of command parameters.
  * @param {string} [endPoint="/"] endpoint URL for POST to webdis
  * @return {Object} Promise that resolves to webdis requested data or status
  */
 
+var method = "POST";
+
+function setMethod(m) {
+    method = m;
+}
+
 function request(command) {
     var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
 
-    return fetch(endPoint, {
+    var commandURL = command.map(stringifyObjects).map(encodeURIComponent).join("/");
+    var options = {
+        method: method,
         credentials: 'same-origin',
-        method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
-        },
-        body: command.map(stringifyObjects).map(encodeURIComponent).join("/")
-    }).then(checkStatus).then(function (response) {
+        }
+    };
+    if (method === "POST") options.body = commandURL;
+    var webdisPromise = method === "GET" ? fetch(endPoint + commandURL, options) : fetch(endPoint, options);
+    return webdisPromise.then(checkStatus).then(function (response) {
         return response.json();
     }).then(function (data) {
         return data[command[0]];
@@ -87,29 +100,29 @@ var Connection = exports.Connection = function () {
     }
 
     _createClass(Connection, [{
-        key: "r",
+        key: 'r',
         value: function r(cmd) {
             var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
 
             return request([cmd].concat(params), this.endPoint);
         }
     }, {
-        key: "auth",
+        key: 'auth',
         value: function auth(password) {
             return this.r('AUTH', password);
         }
     }, {
-        key: "echo",
+        key: 'echo',
         value: function echo(m) {
             return this.r('ECHO', m);
         }
     }, {
-        key: "ping",
+        key: 'ping',
         value: function ping(m) {
             return this.r('PING', m);
         }
     }, {
-        key: "wait",
+        key: 'wait',
         value: function wait(numslaves, timeout) {
             return this.r('WAIT', [numslaves, timeout]);
         }
@@ -128,14 +141,14 @@ var Generic = exports.Generic = function () {
     }
 
     _createClass(Generic, [{
-        key: "r",
+        key: 'r',
         value: function r(cmd) {
             var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
 
             return request([cmd].concat(params), this.endPoint);
         }
     }, {
-        key: "mget",
+        key: 'mget',
         value: function mget() {
             for (var _len = arguments.length, manykeys = Array(_len), _key = 0; _key < _len; _key++) {
                 manykeys[_key] = arguments[_key];
@@ -144,29 +157,29 @@ var Generic = exports.Generic = function () {
             return this.r('MGET', manykeys);
         }
     }, {
-        key: "mset",
+        key: 'mset',
         value: function mset(obj) {
             return this.r('MSET', asPairArray(obj));
         }
     }, {
-        key: "msetnx",
+        key: 'msetnx',
         value: function msetnx(obj) {
             return this.r('MSETNX', asPairArray(obj));
         }
     }, {
-        key: "keysMatching",
+        key: 'keysMatching',
         value: function keysMatching() {
             var pattern = arguments.length <= 0 || arguments[0] === undefined ? '*' : arguments[0];
 
             return this.r('KEYS', pattern);
         }
     }, {
-        key: "randomKey",
+        key: 'randomKey',
         value: function randomKey() {
             return this.r('RANDOMKEY');
         }
     }, {
-        key: "select",
+        key: 'select',
         value: function select(index) {
             return this.r('SELECT', index);
         }
@@ -186,7 +199,7 @@ var Key = exports.Key = function () {
     }
 
     _createClass(Key, [{
-        key: "r",
+        key: 'r',
         value: function r() {
             for (var _len2 = arguments.length, cmdparams = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 cmdparams[_key2] = arguments[_key2];
@@ -196,7 +209,7 @@ var Key = exports.Key = function () {
             return request(cmdparams, this.endPoint);
         }
     }, {
-        key: "append",
+        key: 'append',
         value: function append(v) {
             return this.r('APPEND', v);
         }
@@ -204,102 +217,102 @@ var Key = exports.Key = function () {
         // bitfield operations not implemented
 
     }, {
-        key: "decr",
+        key: 'decr',
         value: function decr() {
             return this.r('DECR');
         }
     }, {
-        key: "decrBy",
+        key: 'decrBy',
         value: function decrBy(amount) {
             return this.r('DECRBY', amount);
         }
     }, {
-        key: "del",
+        key: 'del',
         value: function del() {
             return this.r('DEL');
         }
     }, {
-        key: "dump",
+        key: 'dump',
         value: function dump() {
             return this.r('DUMP');
         }
     }, {
-        key: "exists",
+        key: 'exists',
         value: function exists() {
             return this.r('EXISTS');
         }
     }, {
-        key: "expire",
+        key: 'expire',
         value: function expire(seconds) {
             return this.r('EXPIRE', seconds);
         }
     }, {
-        key: "expireAt",
+        key: 'expireAt',
         value: function expireAt(unixts) {
             return this.r('EXPIREAT', unixts);
         }
     }, {
-        key: "getRange",
+        key: 'getRange',
         value: function getRange(starts, ends) {
             return this.r('GETRANGE', starts, ends);
         }
     }, {
-        key: "getSet",
+        key: 'getSet',
         value: function getSet(v) {
             return this.r('GETSET', v);
         }
     }, {
-        key: "get",
+        key: 'get',
         value: function get() {
             return this.r('GET');
         }
     }, {
-        key: "incr",
+        key: 'incr',
         value: function incr() {
             return this.r('INCR');
         }
     }, {
-        key: "incrBy",
+        key: 'incrBy',
         value: function incrBy(increment) {
             return this.r('INCRBY', increment);
         }
     }, {
-        key: "incrByFloat",
+        key: 'incrByFloat',
         value: function incrByFloat(increment) {
             return this.r('INCRBYFLOAT', increment);
         }
     }, {
-        key: "moveToDB",
+        key: 'moveToDB',
         value: function moveToDB(db) {
             return this.r('MOVE', db);
         }
     }, {
-        key: "persist",
+        key: 'persist',
         value: function persist() {
             return this.r('PERSIST');
         }
     }, {
-        key: "pExpire",
+        key: 'pExpire',
         value: function pExpire(ms) {
             return this.r('PEXPIRE', ms);
         }
     }, {
-        key: "pExpireAt",
+        key: 'pExpireAt',
         value: function pExpireAt(jsts) {
             return this.r('PEXPIREAT', jsts);
         }
     }, {
-        key: "pSetEx",
+        key: 'pSetEx',
         value: function pSetEx(ms, v) {
             return this.r('PSETEX', ms, v);
         }
     }, {
-        key: "pTTL",
+        key: 'pTTL',
         value: function pTTL() {
             return this.r('PTTL');
         }
     }, {
-        key: "rename",
+        key: 'rename',
         value: function rename(newk) {
             var myPromise = this.r('RENAME', newk);
             this.k = newk;
@@ -310,42 +323,42 @@ var Key = exports.Key = function () {
         // need .then clause for RENAMENX to adjust this.k conditionally 
 
     }, {
-        key: "restore",
+        key: 'restore',
         value: function restore(ttl, sval) {
             return this.r('RESTORE', ttl, sval);
         }
     }, {
-        key: "set",
+        key: 'set',
         value: function set(v) {
             return this.r('SET', v);
         }
     }, {
-        key: "setEx",
+        key: 'setEx',
         value: function setEx(sec, v) {
             return this.r('SETEX', sec, v);
         }
     }, {
-        key: "setnx",
+        key: 'setnx',
         value: function setnx(v) {
             return this.r('SETNX', v);
         }
     }, {
-        key: "setrange",
+        key: 'setrange',
         value: function setrange(offset, v) {
             return this.r('SETRANGE', offset, v);
         }
     }, {
-        key: "strlen",
+        key: 'strlen',
         value: function strlen() {
             return this.r('STRLEN');
         }
     }, {
-        key: "ttl",
+        key: 'ttl',
         value: function ttl() {
             return this.r('TTL');
         }
     }, {
-        key: "type",
+        key: 'type',
         value: function type() {
             return this.r('TYPE');
         }
@@ -365,71 +378,71 @@ var Hash = exports.Hash = function () {
     }
 
     _createClass(Hash, [{
-        key: "r",
+        key: 'r',
         value: function r(cmd) {
             var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
 
             return request([cmd, this.k].concat(params), this.endPoint);
         }
     }, {
-        key: "deleteAll",
+        key: 'deleteAll',
         value: function deleteAll() {
             return this.r('DEL');
         }
     }, {
-        key: "del",
+        key: 'del',
         value: function del(f) {
             return this.r('HDEL', f);
         }
     }, {
-        key: "getAll",
+        key: 'getAll',
         value: function getAll() {
             return this.r('HGETALL');
         }
     }, {
-        key: "getField",
+        key: 'getField',
         value: function getField(f) {
             return this.r('HGET', [f]);
         }
     }, {
-        key: "setnx",
+        key: 'setnx',
         value: function setnx(f, v) {
             return this.r('HSETNX', [f, v]);
         }
     }, {
-        key: "setAll",
+        key: 'setAll',
         value: function setAll(obj) {
             var k = this.k;
             var mycmd = ['MULTI', 'DEL', k, 'HMSET', k].concat(asPairArray(obj), 'EXEC');
             return request(mycmd, this.endPoint);
         }
     }, {
-        key: "update",
+        key: 'update',
         value: function update(obj) {
             return this.r('HMSET', asPairArray(obj));
         }
     }, {
-        key: "incrby",
+        key: 'incrby',
         value: function incrby(f, inc) {
             return this.r('HINCRBY', f, inc);
         }
     }, {
-        key: "incrbyfloat",
+        key: 'incrbyfloat',
         value: function incrbyfloat(f, floatInc) {
             return this.r('HINCRBYFLOAT', f, floatInc);
         }
     }, {
-        key: "hkeys",
+        key: 'hkeys',
         value: function hkeys() {
             return this.r('HKEYS');
         }
     }, {
-        key: "hvals",
+        key: 'hvals',
         value: function hvals() {
             return this.r('HVALS');
         }
     }, {
-        key: "len",
+        key: 'len',
         value: function len() {
             return this.r('HLEN');
         }
