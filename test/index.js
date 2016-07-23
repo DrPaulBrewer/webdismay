@@ -20,17 +20,17 @@ W.setMethod("GET"); // there might be an issue with http-proxy and POST as run b
 
 function tryConfirm({name, x, f, p, check, g, confirm}){
     QUnit.test(name, function(assert){
-        assert.expect(2);
+        assert.expect(1+(!!g));
         const done=assert.async();
         function onError(e){
             assert.ok(false, "error: "+e);
         }
         function step3(gResult){
-            assert.ok(confirm(gResult), g+' yielded '+JSON.stringify(gResult));
+            assert.ok(confirm(gResult,p), g+' yielded '+JSON.stringify(gResult));
             done();
         }
         function step2(fResult){
-            assert.ok(check(fResult), f+' yielded '+JSON.stringify(fResult));
+            assert.ok(check(fResult,p), f+' yielded '+JSON.stringify(fResult));
             if (g)
                 x[g]().then(step3, onError);
             else
@@ -57,54 +57,58 @@ QUnit.test("fetch exists", function(assert){
     assert.ok((typeof(window.fetch) === 'function'), "window.fetch is a function");
 });
 
-QUnit.test("set Key test123 to 42 without testing", function(assert){
-    assert.expect(1);
-    const done = assert.async();
-    (new W
-     .Key('test123')
-     .set(42)
-     .then(
-         function(result){
-             assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
-             return result;
-         },
-         function(e){
-             assert.ok(false, e);
-             return e;
-         }
-     )
-     .then(done,done)
-    );
+function same(r,p){
+    return JSON.stringify(r)===JSON.stringify(p);
+}
+
+function r0(r){
+    return (r && r[0]);
+}
+
+tryConfirm({
+    name: "set t1 to [1,2,[3,4],{x:5}] and check it",
+    x: new W.Key("t1"),
+    f: "set",
+    p: [1,2,[3,4],{x:5}],
+    check: r0,
+    g: "get",
+    confirm:  same
 });
 
-QUnit.test("set key test345 to 57 and check it", function(assert){
-    assert.expect(2);
-    const done = assert.async(1);
-    const t = new W.Key('test345');
-    (t.set(57)
-     .then(function(result){
-         assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
-         return result;
-     })
-     .then(function(){
-         console.log("about to call t.get() ");
-         t.get().then(
-             function(result){
-                 assert.ok(result===57, 'get result should equal the set value, 57, got:'+result);
-                 return result;
-             }
-         ).then(done,done);
-     }, done)
-    );
-});
-             
 tryConfirm({
-    name: "set xyz to [1,2,3] and check it",
-    x: new W.Key("xyz"),
+    name: "set t2 to 47.5 and check it",
+    x: new W.Key("t2"),
     f: "set",
-    p: [1,2,3],
-    check: (r)=>(r && r[0]),
+    p: 47.5,
+    check: r0,
     g: "get",
-    confirm: (r)=>(JSON.stringify(r)==='[1,2,3]')
+    confirm: same
 });
+
+tryConfirm({
+    name: "set t3 to '67 apples @ http://more.apples.please ' and check it",
+    x: new W.Key("t3"),
+    f: "set",
+    p: "67 apples @ http://more.apples.please ",
+    check: r0,
+    g: "get",
+    confirm: same
+});
+
+tryConfirm({
+    name: "delete a key that is not there",
+    x: new W.Key("nowaythisisthere"),
+    f: "del",
+    check: (r)=>(!r)
+});
+
+tryConfirm({
+    name: "delete key t3 from previous test",
+    x: new W.Key("t3"),
+    f: "del",
+    check:(r)=>(r),
+    g: "get",
+    confirm: (r)=>(!r)
+});
+
 

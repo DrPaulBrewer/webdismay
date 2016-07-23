@@ -13,6 +13,8 @@ function stringifyObjects(x){
 }
 
 function tryParseObjects(x){
+    if (x===null) return null;
+    if (x===undefined) return undefined;
     const type = typeof(x);
     if (type==='number') return x;
     if (type==='string') {

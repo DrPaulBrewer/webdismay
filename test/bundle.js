@@ -5517,6 +5517,8 @@ $__System.register('19', ['18', 'b', 'c'], function (_export) {
     }
 
     function tryParseObjects(x) {
+        if (x === null) return null;
+        if (x === undefined) return undefined;
         var type = typeof x;
         if (type === 'number') return x;
         if (type === 'string') {
@@ -5995,21 +5997,29 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
         var confirm = _ref.confirm;
 
         QUnit.test(name, function (assert) {
-            assert.expect(2);
+            assert.expect(1 + !!g);
             var done = assert.async();
             function onError(e) {
                 assert.ok(false, "error: " + e);
             }
             function step3(gResult) {
-                assert.ok(confirm(gResult), g + ' yielded ' + JSON.stringify(gResult));
+                assert.ok(confirm(gResult, p), g + ' yielded ' + JSON.stringify(gResult));
                 done();
             }
             function step2(fResult) {
-                assert.ok(check(fResult), f + ' yielded ' + JSON.stringify(fResult));
+                assert.ok(check(fResult, p), f + ' yielded ' + JSON.stringify(fResult));
                 if (g) x[g]().then(step3, onError);else done();
             }
             x[f](p).then(step2, onError);
         });
+    }
+
+    function same(r, p) {
+        return JSON.stringify(r) === JSON.stringify(p);
+    }
+
+    function r0(r) {
+        return r && r[0];
     }
 
     return {
@@ -6033,47 +6043,55 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
                 assert.expect(2);
                 assert.ok(typeof fetch === 'function', "fetch is function");
                 assert.ok(typeof window.fetch === 'function', "window.fetch is a function");
-            });
-
-            QUnit.test("set Key test123 to 42 without testing", function (assert) {
-                assert.expect(1);
-                var done = assert.async();
-                new W.Key('test123').set(42).then(function (result) {
-                    assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
-                    return result;
-                }, function (e) {
-                    assert.ok(false, e);
-                    return e;
-                }).then(done, done);
-            });
-
-            QUnit.test("set key test345 to 57 and check it", function (assert) {
-                assert.expect(2);
-                var done = assert.async(1);
-                var t = new W.Key('test345');
-                t.set(57).then(function (result) {
-                    assert.ok(result && result[0], 'promise resolved to array with true as 1st element');
-                    return result;
-                }).then(function () {
-                    console.log("about to call t.get() ");
-                    t.get().then(function (result) {
-                        assert.ok(result === 57, 'get result should equal the set value, 57, got:' + result);
-                        return result;
-                    }).then(done, done);
-                }, done);
+            });tryConfirm({
+                name: "set t1 to [1,2,[3,4],{x:5}] and check it",
+                x: new W.Key("t1"),
+                f: "set",
+                p: [1, 2, [3, 4], { x: 5 }],
+                check: r0,
+                g: "get",
+                confirm: same
             });
 
             tryConfirm({
-                name: "set xyz to [1,2,3] and check it",
-                x: new W.Key("xyz"),
+                name: "set t2 to 47.5 and check it",
+                x: new W.Key("t2"),
                 f: "set",
-                p: [1, 2, 3],
+                p: 47.5,
+                check: r0,
+                g: "get",
+                confirm: same
+            });
+
+            tryConfirm({
+                name: "set t3 to '67 apples @ http://more.apples.please ' and check it",
+                x: new W.Key("t3"),
+                f: "set",
+                p: "67 apples @ http://more.apples.please ",
+                check: r0,
+                g: "get",
+                confirm: same
+            });
+
+            tryConfirm({
+                name: "delete a key that is not there",
+                x: new W.Key("nowaythisisthere"),
+                f: "del",
                 check: function check(r) {
-                    return r && r[0];
+                    return !r;
+                }
+            });
+
+            tryConfirm({
+                name: "delete key t3 from previous test",
+                x: new W.Key("t3"),
+                f: "del",
+                check: function check(r) {
+                    return r;
                 },
                 g: "get",
                 confirm: function confirm(r) {
-                    return JSON.stringify(r) === '[1,2,3]';
+                    return !r;
                 }
             });
         }
