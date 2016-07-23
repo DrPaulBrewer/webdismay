@@ -263,7 +263,7 @@ export class Key {
         return this.r('SETNX',v);
     }
 
-    setrange(offset,v){ 
+    setRange(offset,v){ 
         return this.r('SETRANGE',offset,v);
     }
 
@@ -287,11 +287,11 @@ export class Hash {
         this.endPoint = endPoint;
     }
 
-    r(cmd, params=[]){ 
-        return request(
-            [cmd, this.k].concat(params),
-            this.endPoint);
+    r(...cmdparams){
+        cmdparams.splice(1,0,this.k);
+        return request(cmdparams, this.endPoint);
     }
+
 
     deleteAll(){
         return this.r('DEL');
@@ -306,11 +306,11 @@ export class Hash {
     }
     
     getField(f){ 
-        return this.r('HGET',[f]);
+        return this.r('HGET',f);
     }
 
     setnx(f,v){
-        return this.r('HSETNX',[f,v]);
+        return this.r('HSETNX',f,v);
     }
 
     setAll(obj){        
@@ -320,7 +320,7 @@ export class Hash {
     }
     
     update(obj){
-        return this.r('HMSET',asPairArray(obj));
+        return this.r('HMSET', ...asPairArray(obj));
     }
 
     incrby(f,inc){

@@ -11,6 +11,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports.setMethod = setMethod;
 exports.request = request;
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /* global: fetch */
@@ -345,8 +347,8 @@ var Key = exports.Key = function () {
             return this.r('SETNX', v);
         }
     }, {
-        key: 'setrange',
-        value: function setrange(offset, v) {
+        key: 'setRange',
+        value: function setRange(offset, v) {
             return this.r('SETRANGE', offset, v);
         }
     }, {
@@ -381,10 +383,13 @@ var Hash = exports.Hash = function () {
 
     _createClass(Hash, [{
         key: 'r',
-        value: function r(cmd) {
-            var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+        value: function r() {
+            for (var _len3 = arguments.length, cmdparams = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                cmdparams[_key3] = arguments[_key3];
+            }
 
-            return request([cmd, this.k].concat(params), this.endPoint);
+            cmdparams.splice(1, 0, this.k);
+            return request(cmdparams, this.endPoint);
         }
     }, {
         key: 'deleteAll',
@@ -404,12 +409,12 @@ var Hash = exports.Hash = function () {
     }, {
         key: 'getField',
         value: function getField(f) {
-            return this.r('HGET', [f]);
+            return this.r('HGET', f);
         }
     }, {
         key: 'setnx',
         value: function setnx(f, v) {
-            return this.r('HSETNX', [f, v]);
+            return this.r('HSETNX', f, v);
         }
     }, {
         key: 'setAll',
@@ -421,7 +426,7 @@ var Hash = exports.Hash = function () {
     }, {
         key: 'update',
         value: function update(obj) {
-            return this.r('HMSET', asPairArray(obj));
+            return this.r.apply(this, ['HMSET'].concat(_toConsumableArray(asPairArray(obj))));
         }
     }, {
         key: 'incrby',

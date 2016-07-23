@@ -8,6 +8,12 @@ import * as W from "../src/index.js";
 
 W.setMethod("GET"); // there might be an issue with http-proxy and POST as run by karma test runner
 
+const totalTs = 100;
+
+const delCommand = ['DEL'].concat(Array(totalTs).fill(0).map((v,i)=>('t'+i)));
+
+W.request(delCommand); // deletes everything
+
 /* two part async test runner
  * @param {string} n name -- name of test
  * @param {Object} x an object to test
@@ -19,7 +25,7 @@ W.setMethod("GET"); // there might be an issue with http-proxy and POST as run b
  * @param {Function(Object x.g()):boolean} confirm check getter results returning true or false
  */
 
-function tryConfirm({n, x, i, f, p, check, g, confirm}){
+function tryConfirm({n, x, i, f, p, params, check, g, confirm}){
     QUnit.test(n, function(assert){
         assert.expect(1+(!!g));
         const done=assert.async();
@@ -37,8 +43,9 @@ function tryConfirm({n, x, i, f, p, check, g, confirm}){
             else
                 done();
         }
+	const fparams = (Array.isArray(params))? params: [p];
         function atest(){
-            x[f](p).then(step2, onError);
+            x[f](...fparams).then(step2, onError);
         }
         if (i===undefined)
             atest();
@@ -159,23 +166,131 @@ tryConfirm({
     check: (r)=>(r===1)
 });
 
-new W.Key("t8").set(1).then(function(){
-    new W.Key("t8").expire(1).then(function(){
-        setTimeout(function(){
-            tryConfirm({
-                n: "expired key t8 does not exist",
-                x: new W.Key("t8"),
-                f: "exists",
-                check: (r)=>(r===0)
-            });
-        }, 2000);
-        tryConfirm({
-            n: "immediately after expire t8 1 key t8 till exists",
-            x: new W.Key("t8"),
-            f: "exists",
-            check: (r)=>(r===1)
-        });
-    });
+/* async test for t8 to test expire had issues */
+
+tryConfirm({
+    n: "getrange t9 0 2 yields foo",
+    x: new W.Key("t9"),
+    i: "foobar",
+    f: "getRange",
+    params: [0,2],
+    check: (r)=>(r==='foo')
 });
 
+tryConfirm({
+    n: "getSet t10 fizzbuzz yields old value foobar, sets fizzbuzz",
+    x: new W.Key("t10"),
+    i: "foobar",
+    f: "getSet",
+    p: "fizzbuzz",
+    check: (r)=>(r==="foobar"),
+    g: "get",
+    confirm: (r)=>(r==="fizzbuzz")
+});
     
+tryConfirm({
+    n: "incr t11 yields 56",
+    x: new W.Key("t11"),
+    i: 55,
+    f: "incr",
+    check: (r)=>(r===56),
+    g: "get",
+    confirm: (r)=>(r===56)
+});
+
+tryConfirm({
+    n: "incr t12 -40 yields 60",
+    x: new W.Key("t12"),
+    i: 100,
+    f: "incrBy",
+    p: -40,
+    check: (r)=>(r===60),
+    g: "get",
+    confirm: (r)=>(r===60)
+});
+
+tryConfirm({
+    n: "incr t13 2.25 yields 3.5",
+    x: new W.Key("t12"),
+    i: 1.25,
+    f: "incrByFloat",
+    p: 2.25,
+    check: (r)=>(r===3.5),
+    g: "get",
+    confirm: (r)=>(r===3.5)
+});
+
+
+/*
+ * moveToDB untested
+ */
+
+/*
+ * persist, pExpire, etc... untested
+ */
+
+tryConfirm({
+    n: "rename t14 t14B: shows exists as key is renamed locally too",
+    x: new W.Key("t14"),
+    i: 123,
+    f: "rename",
+    p: "t14B",
+    check: ()=>(true),
+    g: "exists", 
+    confirm: (r)=>(r===1) // local key is renamed too
+});
+
+/*
+ * as DUMP does not seem to work in webdis, RESTORE is also untested
+ */
+
+tryConfirm({
+    n: "setnx t15 -23 fails, as t15 exists, t15 will still be 55",
+    x: new W.Key("t15"),
+    i: 55,
+    f: "setnx",
+    p: -23,
+    check: (r)=>(r===0),
+    g: "get",
+    confirm: (r)=>(r===55)
+});
+
+tryConfirm({
+    n: "setnx t16 to random number succeeds, as t16 does not exist",
+    x: new W.Key("t16"),
+    f: "setnx",
+    p: Math.random(),
+    check: ()=>(true),
+    g: "get",
+    confirm: same
+});
+
+
+tryConfirm({
+    n: "setRange t17 3 bazz yields 7 and sets t17 to foobazz",
+    i: "foobar",
+    x: new W.Key("t17"),
+    f: "setRange",
+    params: [3,'bazz'],
+    check: (r)=>(r===7),
+    g: "get",
+    confirm: (r)=>(r==="foobazz")
+});
+
+tryConfirm({
+    n: "strlen t18 yields 10",
+    i: "0123456789",
+    x: new W.Key("t18"),
+    f: "strlen",
+    check: (r)=>(r===10)
+});
+
+/*
+ * ttl, type untested
+ *
+ */
+
+/*
+ * Tests for Hash 
+ */
+
