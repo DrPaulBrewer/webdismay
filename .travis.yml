@@ -15,7 +15,8 @@ before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 script:
-  - karma start --browsers PhantomJS Firefox --single-run
+  - karma start --browsers PhantomJS --single-run
+  - karma start --browsers Firefox --single-run
 after_script:
   - docker logs red
   - docker logs blue
