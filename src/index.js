@@ -174,9 +174,9 @@ export class Key {
         return this.r('DEL');
     }
 
-    dump(){ 
-        return this.r('DUMP');
-    }
+    /*
+     * DUMP seems to do nothing on webdis
+     */
 
     exists(){ 
         return this.r('EXISTS');

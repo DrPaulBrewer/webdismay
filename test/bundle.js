@@ -5742,11 +5742,11 @@ $__System.register('19', ['18', 'b', 'c'], function (_export) {
                     value: function del() {
                         return this.r('DEL');
                     }
-                }, {
-                    key: 'dump',
-                    value: function dump() {
-                        return this.r('DUMP');
-                    }
+
+                    /*
+                     * DUMP seems to do nothing on webdis
+                     */
+
                 }, {
                     key: 'exists',
                     value: function exists() {
@@ -5978,8 +5978,9 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
     // there might be an issue with http-proxy and POST as run by karma test runner
 
     /* two part async test runner
-     * @param {string} name -- name of test
+     * @param {string} n name -- name of test
      * @param {Object} x an object to test
+     * @param {Object|number|string} i init value to set
      * @param {String} f an async method of x
      * @param {Array} p params to method
      * @param {Function(Object x.f(p)):boolean} check function(result) returning true or false
@@ -5988,15 +5989,16 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
      */
 
     function tryConfirm(_ref) {
-        var name = _ref.name;
+        var n = _ref.n;
         var x = _ref.x;
+        var i = _ref.i;
         var f = _ref.f;
         var p = _ref.p;
         var check = _ref.check;
         var g = _ref.g;
         var confirm = _ref.confirm;
 
-        QUnit.test(name, function (assert) {
+        QUnit.test(n, function (assert) {
             assert.expect(1 + !!g);
             var done = assert.async();
             function onError(e) {
@@ -6010,7 +6012,10 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
                 assert.ok(check(fResult, p), f + ' yielded ' + JSON.stringify(fResult));
                 if (g) x[g]().then(step3, onError);else done();
             }
-            x[f](p).then(step2, onError);
+            function atest() {
+                x[f](p).then(step2, onError);
+            }
+            if (i === undefined) atest();else x.set(i).then(atest);
         });
     }
 
@@ -6044,7 +6049,7 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
                 assert.ok(typeof fetch === 'function', "fetch is function");
                 assert.ok(typeof window.fetch === 'function', "window.fetch is a function");
             });tryConfirm({
-                name: "set t1 to [1,2,[3,4],{x:5}] and check it",
+                n: "set t1 to [1,2,[3,4],{x:5}] and check it",
                 x: new W.Key("t1"),
                 f: "set",
                 p: [1, 2, [3, 4], { x: 5 }],
@@ -6054,7 +6059,7 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
             });
 
             tryConfirm({
-                name: "set t2 to 47.5 and check it",
+                n: "set t2 to 47.5 and check it",
                 x: new W.Key("t2"),
                 f: "set",
                 p: 47.5,
@@ -6064,7 +6069,7 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
             });
 
             tryConfirm({
-                name: "set t3 to '67 apples @ http://more.apples.please ' and check it",
+                n: "set t3 to '67 apples @ http://more.apples.please ' and check it",
                 x: new W.Key("t3"),
                 f: "set",
                 p: "67 apples @ http://more.apples.please ",
@@ -6074,7 +6079,51 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
             });
 
             tryConfirm({
-                name: "delete a key that is not there",
+                n: "append t4 'bar' yielding 'foobar'",
+                x: new W.Key("t4"),
+                i: "foo",
+                f: "append",
+                p: "bar",
+                check: function check(r) {
+                    return r === 6;
+                },
+                g: "get",
+                confirm: function confirm(r) {
+                    return r === "foobar";
+                }
+            });
+
+            tryConfirm({
+                n: "decr t5 to yield 46",
+                x: new W.Key("t5"),
+                i: 47,
+                f: "decr",
+                check: function check(r) {
+                    return r === 46;
+                },
+                g: "get",
+                confirm: function confirm(r) {
+                    return r === 46;
+                }
+            });
+
+            tryConfirm({
+                n: "decr t6 10 to yield 23",
+                x: new W.Key("t6"),
+                i: 33,
+                f: "decrBy",
+                p: 10,
+                check: function check(r) {
+                    return r === 23;
+                },
+                g: "get",
+                confirm: function confirm(r) {
+                    return r === 23;
+                }
+            });
+
+            tryConfirm({
+                n: "delete a key that is not there",
                 x: new W.Key("nowaythisisthere"),
                 f: "del",
                 check: function check(r) {
@@ -6083,16 +6132,49 @@ $__System.register('1', ['3', '5', '7', '19'], function (_export) {
             });
 
             tryConfirm({
-                name: "delete key t3 from previous test",
+                n: "delete key t3 from previous test",
                 x: new W.Key("t3"),
                 f: "del",
                 check: function check(r) {
                     return r;
                 },
-                g: "get",
+                g: "exists",
                 confirm: function confirm(r) {
                     return !r;
                 }
+            });
+
+            tryConfirm({
+                n: "exists t7 yields 1",
+                x: new W.Key("t7"),
+                i: "the  purple unicorns jumped over a harvest moon",
+                f: "exists",
+                check: function check(r) {
+                    return r === 1;
+                }
+            });
+
+            new W.Key("t8").set(1).then(function () {
+                new W.Key("t8").expire(1).then(function () {
+                    setTimeout(function () {
+                        tryConfirm({
+                            n: "expired key t8 does not exist",
+                            x: new W.Key("t8"),
+                            f: "exists",
+                            check: function check(r) {
+                                return r === 0;
+                            }
+                        });
+                    }, 2000);
+                    tryConfirm({
+                        n: "immediately after expire t8 1 key t8 till exists",
+                        x: new W.Key("t8"),
+                        f: "exists",
+                        check: function check(r) {
+                            return r === 1;
+                        }
+                    });
+                });
             });
         }
     };

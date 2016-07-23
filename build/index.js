@@ -233,11 +233,11 @@ var Key = exports.Key = function () {
         value: function del() {
             return this.r('DEL');
         }
-    }, {
-        key: 'dump',
-        value: function dump() {
-            return this.r('DUMP');
-        }
+
+        /*
+         * DUMP seems to do nothing on webdis
+         */
+
     }, {
         key: 'exists',
         value: function exists() {

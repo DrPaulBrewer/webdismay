@@ -9,8 +9,9 @@ import * as W from "../src/index.js";
 W.setMethod("GET"); // there might be an issue with http-proxy and POST as run by karma test runner
 
 /* two part async test runner
- * @param {string} name -- name of test
+ * @param {string} n name -- name of test
  * @param {Object} x an object to test
+ * @param {Object|number|string} i init value to set
  * @param {String} f an async method of x
  * @param {Array} p params to method
  * @param {Function(Object x.f(p)):boolean} check function(result) returning true or false
@@ -18,8 +19,8 @@ W.setMethod("GET"); // there might be an issue with http-proxy and POST as run b
  * @param {Function(Object x.g()):boolean} confirm check getter results returning true or false
  */
 
-function tryConfirm({name, x, f, p, check, g, confirm}){
-    QUnit.test(name, function(assert){
+function tryConfirm({n, x, i, f, p, check, g, confirm}){
+    QUnit.test(n, function(assert){
         assert.expect(1+(!!g));
         const done=assert.async();
         function onError(e){
@@ -36,7 +37,13 @@ function tryConfirm({name, x, f, p, check, g, confirm}){
             else
                 done();
         }
-        x[f](p).then(step2, onError);
+        function atest(){
+            x[f](p).then(step2, onError);
+        }
+        if (i===undefined)
+            atest();
+        else 
+            x.set(i).then(atest);
     });
 }
 
@@ -66,7 +73,7 @@ function r0(r){
 }
 
 tryConfirm({
-    name: "set t1 to [1,2,[3,4],{x:5}] and check it",
+    n: "set t1 to [1,2,[3,4],{x:5}] and check it",
     x: new W.Key("t1"),
     f: "set",
     p: [1,2,[3,4],{x:5}],
@@ -76,7 +83,7 @@ tryConfirm({
 });
 
 tryConfirm({
-    name: "set t2 to 47.5 and check it",
+    n: "set t2 to 47.5 and check it",
     x: new W.Key("t2"),
     f: "set",
     p: 47.5,
@@ -86,7 +93,7 @@ tryConfirm({
 });
 
 tryConfirm({
-    name: "set t3 to '67 apples @ http://more.apples.please ' and check it",
+    n: "set t3 to '67 apples @ http://more.apples.please ' and check it",
     x: new W.Key("t3"),
     f: "set",
     p: "67 apples @ http://more.apples.please ",
@@ -96,19 +103,79 @@ tryConfirm({
 });
 
 tryConfirm({
-    name: "delete a key that is not there",
+    n: "append t4 'bar' yielding 'foobar'",
+    x: new W.Key("t4"),
+    i: "foo",
+    f: "append",
+    p: "bar",
+    check: (r)=>(r===6),
+    g: "get",
+    confirm: (r)=>(r==="foobar")
+});
+
+tryConfirm({
+    n: "decr t5 to yield 46",
+    x: new W.Key("t5"),
+    i: 47,
+    f: "decr",
+    check: (r)=>(r===46),
+    g: "get",
+    confirm: (r)=>(r===46)
+});
+
+
+tryConfirm({
+    n: "decr t6 10 to yield 23",
+    x: new W.Key("t6"),
+    i: 33,
+    f: "decrBy",
+    p: 10,
+    check: (r)=>(r===23),
+    g: "get",
+    confirm: (r)=>(r===23)
+});
+
+tryConfirm({
+    n: "delete a key that is not there",
     x: new W.Key("nowaythisisthere"),
     f: "del",
     check: (r)=>(!r)
 });
 
 tryConfirm({
-    name: "delete key t3 from previous test",
+    n: "delete key t3 from previous test",
     x: new W.Key("t3"),
     f: "del",
     check:(r)=>(r),
-    g: "get",
+    g: "exists",
     confirm: (r)=>(!r)
 });
 
+tryConfirm({
+    n: "exists t7 yields 1",
+    x: new W.Key("t7"),
+    i: "the  purple unicorns jumped over a harvest moon",
+    f: "exists",
+    check: (r)=>(r===1)
+});
 
+new W.Key("t8").set(1).then(function(){
+    new W.Key("t8").expire(1).then(function(){
+        setTimeout(function(){
+            tryConfirm({
+                n: "expired key t8 does not exist",
+                x: new W.Key("t8"),
+                f: "exists",
+                check: (r)=>(r===0)
+            });
+        }, 2000);
+        tryConfirm({
+            n: "immediately after expire t8 1 key t8 till exists",
+            x: new W.Key("t8"),
+            f: "exists",
+            check: (r)=>(r===1)
+        });
+    });
+});
+
+    
