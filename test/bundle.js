@@ -7215,9 +7215,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
                 x: new W.Hash("t20"),
                 f: "update",
                 p: { z: 20 },
-                check: function check(r) {
-                    return r === 1;
-                },
+                check: r0,
                 g: "getAll",
                 confirm: function confirm(r) {
                     return r.crazy && r.funny && !r.mean && r.z === 20;

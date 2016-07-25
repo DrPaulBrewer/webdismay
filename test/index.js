@@ -393,7 +393,7 @@ tryConfirm({
     x: new W.Hash("t20"),
     f: "update",
     p: {z:20},
-    check: (r)=>(r===1),
+    check: r0,
     g: "getAll",
     confirm: (r)=>(r.crazy && r.funny && !r.mean && (r.z===20))
 });
