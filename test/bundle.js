@@ -6404,6 +6404,10 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         return request(['SELECT', index]);
     }
 
+    function key(k) {
+        return new Key(k);
+    }
+
     function objectFromKVArray(A) {
         // eslint-disable-line no-unused-vars
         if (A.length === 0) return {};
@@ -6411,6 +6415,10 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         for (var i = 1, l = A.length; i < l; i += 2) {
             o[i - 1] = i;
         }return o;
+    }
+
+    function hash(k) {
+        return new Hash(k);
     }
 
     return {
@@ -6455,6 +6463,10 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
             _export('randomKey', randomKey);
 
             _export('select', select);
+
+            _export('key', key);
+
+            _export('hash', hash);
 
             defaults = {
                 method: "POST",
@@ -6833,10 +6845,12 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
                 assert.ok(W, "W exists");
             });
 
-            QUnit.test("W has Key, Hash constructors", function (assert) {
-                assert.expect(2);
+            QUnit.test("W has Key, Hash constructors and key, hash factories", function (assert) {
+                assert.expect(4);
                 assert.ok(typeof W.Key === "function", "W.Key");
+                assert.ok(typeof W.key === "function", "W.key");
                 assert.ok(typeof W.Hash === "function", "W.Hash");
+                assert.ok(typeof W.hash === "function", "W.hash");
             });
 
             QUnit.test("fetch exists", function (assert) {
@@ -6912,7 +6926,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "set t1 to [1,2,[3,4],{x:5}] and check it",
-                x: new W.Key("t1"),
+                x: W.key("t1"),
                 f: "set",
                 p: [1, 2, [3, 4], { x: 5 }],
                 check: r0,
@@ -6922,7 +6936,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "set t2 to 47.5 and check it",
-                x: new W.Key("t2"),
+                x: W.key("t2"),
                 f: "set",
                 p: 47.5,
                 check: r0,
@@ -6932,7 +6946,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "set t3 to '67 apples @ http://more.apples.please ' and check it",
-                x: new W.Key("t3"),
+                x: W.key("t3"),
                 f: "set",
                 p: "67 apples @ http://more.apples.please ",
                 check: r0,
@@ -6942,7 +6956,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "append t4 'bar' yielding 'foobar'",
-                x: new W.Key("t4"),
+                x: W.key("t4"),
                 i: "foo",
                 f: "append",
                 p: "bar",
@@ -6957,7 +6971,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "decr t5 to yield 46",
-                x: new W.Key("t5"),
+                x: W.key("t5"),
                 i: 47,
                 f: "decr",
                 check: function check(r) {
@@ -6971,7 +6985,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "decr t6 10 to yield 23",
-                x: new W.Key("t6"),
+                x: W.key("t6"),
                 i: 33,
                 f: "decrBy",
                 p: 10,
@@ -6986,7 +7000,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "delete a key that is not there",
-                x: new W.Key("nowaythisisthere"),
+                x: W.key("nowaythisisthere"),
                 f: "del",
                 check: function check(r) {
                     return !r;
@@ -6995,7 +7009,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "delete key t3 from previous test",
-                x: new W.Key("t3"),
+                x: W.key("t3"),
                 f: "del",
                 check: function check(r) {
                     return r;
@@ -7008,7 +7022,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "exists t7 yields 1",
-                x: new W.Key("t7"),
+                x: W.key("t7"),
                 i: "the  purple unicorns jumped over a harvest moon",
                 f: "exists",
                 check: function check(r) {
@@ -7020,7 +7034,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "getrange t9 0 2 yields foo",
-                x: new W.Key("t9"),
+                x: W.key("t9"),
                 i: "foobar",
                 f: "getRange",
                 params: [0, 2],
@@ -7031,7 +7045,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "getSet t10 fizzbuzz yields old value foobar, sets fizzbuzz",
-                x: new W.Key("t10"),
+                x: W.key("t10"),
                 i: "foobar",
                 f: "getSet",
                 p: "fizzbuzz",
@@ -7046,7 +7060,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "incr t11 yields 56",
-                x: new W.Key("t11"),
+                x: W.key("t11"),
                 i: 55,
                 f: "incr",
                 check: function check(r) {
@@ -7060,7 +7074,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "incr t12 -40 yields 60",
-                x: new W.Key("t12"),
+                x: W.key("t12"),
                 i: 100,
                 f: "incrBy",
                 p: -40,
@@ -7075,7 +7089,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "incr t13 2.25 yields 3.5",
-                x: new W.Key("t12"),
+                x: W.key("t12"),
                 i: 1.25,
                 f: "incrByFloat",
                 p: 2.25,
@@ -7098,7 +7112,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "rename t14 t14B: shows exists as key is renamed locally too",
-                x: new W.Key("t14"),
+                x: W.key("t14"),
                 i: 123,
                 f: "rename",
                 p: "t14B",
@@ -7117,7 +7131,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "setnx t15 -23 fails, as t15 exists, t15 will still be 55",
-                x: new W.Key("t15"),
+                x: W.key("t15"),
                 i: 55,
                 f: "setnx",
                 p: -23,
@@ -7132,7 +7146,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "setnx t16 to random number succeeds, as t16 does not exist",
-                x: new W.Key("t16"),
+                x: W.key("t16"),
                 f: "setnx",
                 p: Math.random(),
                 check: function check() {
@@ -7145,7 +7159,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
             tryConfirm({
                 n: "setRange t17 3 bazz yields 7 and sets t17 to foobazz",
                 i: "foobar",
-                x: new W.Key("t17"),
+                x: W.key("t17"),
                 f: "setRange",
                 params: [3, 'bazz'],
                 check: function check(r) {
@@ -7160,7 +7174,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
             tryConfirm({
                 n: "strlen t18 yields 10",
                 i: "0123456789",
-                x: new W.Key("t18"),
+                x: W.key("t18"),
                 f: "strlen",
                 check: function check(r) {
                     return r === 10;
@@ -7178,7 +7192,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "create a Hash, check the fields",
-                x: new W.Hash("t20"),
+                x: W.hash("t20"),
                 f: "set",
                 p: { foo: "bar", baz: 3 },
                 check: r0,
@@ -7188,7 +7202,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "set a Hash to some other fields, check that old fields are gone, only new fields present",
-                x: new W.Hash("t20"),
+                x: W.hash("t20"),
                 f: "set",
                 p: { "crazy": "Larry", "mean": "Moe", "funny": "Curly" },
                 check: r0,
@@ -7198,7 +7212,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "del 'mean', check remaining fields",
-                x: new W.Hash("t20"),
+                x: W.hash("t20"),
                 f: "del",
                 p: "mean",
                 check: function check(r) {
@@ -7212,7 +7226,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "update hash t20 field z, set to 20, check all fields",
-                x: new W.Hash("t20"),
+                x: W.hash("t20"),
                 f: "update",
                 p: { z: 20 },
                 check: r0,
@@ -7224,7 +7238,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
 
             tryConfirm({
                 n: "deleteAll removes t20 hash, getall returns {}",
-                x: new W.Hash("t20"),
+                x: W.hash("t20"),
                 f: "deleteAll",
                 check: function check(r) {
                     return r === 1;

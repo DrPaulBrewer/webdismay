@@ -21,6 +21,8 @@ exports.del = del;
 exports.keysMatching = keysMatching;
 exports.randomKey = randomKey;
 exports.select = select;
+exports.key = key;
+exports.hash = hash;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -344,6 +346,10 @@ var Key = exports.Key = function () {
     return Key;
 }();
 
+function key(k) {
+    return new Key(k);
+}
+
 function objectFromKVArray(A) {
     // eslint-disable-line no-unused-vars
     if (A.length === 0) return {};
@@ -440,3 +446,7 @@ var Hash = exports.Hash = function () {
 
     return Hash;
 }();
+
+function hash(k) {
+    return new Hash(k);
+}

@@ -264,7 +264,10 @@ export class Key {
     type(){
         return this.r('TYPE');
     }
+}
 
+export function key(k){
+    return new Key(k);
 }
 
 function objectFromKVArray(A){ // eslint-disable-line no-unused-vars
@@ -338,4 +341,6 @@ export class Hash {
     }
 }
 
-
+export function hash(k){
+    return new Hash(k);
+}
