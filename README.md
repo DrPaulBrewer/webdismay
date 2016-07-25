@@ -1,5 +1,7 @@
 webdismay
 =========
+[![Build Status](https://travis-ci.org/DrPaulBrewer/webdismay.svg?branch=master)](https://travis-ci.org/DrPaulBrewer/webdismay)
+
 Disturbingly open browser-side middleware for webdis-redis stack.  
 
 Access webdis/redis functionality and models from the browser-side via `Promises`
