@@ -8,8 +8,19 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-exports.setMethod = setMethod;
+exports.checkStatus = checkStatus;
+exports.stringifyObjects = stringifyObjects;
+exports.tryParseObjects = tryParseObjects;
+exports.configure = configure;
 exports.request = request;
+exports.echo = echo;
+exports.mget = mget;
+exports.mset = mset;
+exports.msetnx = msetnx;
+exports.del = del;
+exports.keysMatching = keysMatching;
+exports.randomKey = randomKey;
+exports.select = select;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -59,31 +70,42 @@ function tryParseObjects(x) {
  * @return {Object} Promise that resolves to webdis requested data or status
  */
 
-var method = "POST";
+var defaults = {
+    method: "POST",
+    endPoint: "/",
+    preProcess: function preProcess(cmdAndParams) {
+        return cmdAndParams.map(stringifyObjects).map(encodeURIComponent).join("/");
+    },
+    postProcess: tryParseObjects,
+    credentials: 'same-origin',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+};
 
-function setMethod(m) {
-    method = m;
+var options = Object.assign({}, defaults);
+
+function configure(o) {
+    options = Object.assign(options, o);
 }
 
-function request(command) {
-    var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
+function request(commandArray) {
+    var endPoint = arguments.length <= 1 || arguments[1] === undefined ? options.endPoint : arguments[1];
 
-    var commandURL = command.map(stringifyObjects).map(encodeURIComponent).join("/");
-    var options = {
-        method: method,
-        credentials: 'same-origin',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
+    var commandURL = options.preProcess(commandArray);
+    var requestOptions = {
+        method: options.method,
+        credentials: options.credentials,
+        headers: options.headers
     };
-    if (method === "POST") options.body = commandURL;
-    var webdisPromise = method === "GET" ? fetch(endPoint + commandURL, options) : fetch(endPoint, options);
+    if (requestOptions.method === "POST") requestOptions.body = commandURL;
+    var webdisPromise = requestOptions.method === "GET" ? fetch(endPoint + commandURL, requestOptions) : fetch(endPoint, requestOptions);
     return webdisPromise.then(checkStatus).then(function (response) {
         return response.json();
-    }).then(function (data) {
-        return data[command[0]];
-    }).then(tryParseObjects);
+    }).then(function (reply) {
+        return reply[commandArray[0]];
+    }).then(options.postProcess);
 }
 
 function asPairArray(obj) {
@@ -94,123 +116,74 @@ function asPairArray(obj) {
     }return result;
 }
 
-var Connection = exports.Connection = function () {
-    function Connection() {
-        var endPoint = arguments.length <= 0 || arguments[0] === undefined ? "/" : arguments[0];
+function echo(m) {
+    return request(['ECHO', m]);
+}
 
-        _classCallCheck(this, Connection);
+/* ping omitted because does not return same format as others */
 
-        this.endPoint = endPoint;
+function mget() {
+    for (var _len = arguments.length, manykeys = Array(_len), _key = 0; _key < _len; _key++) {
+        manykeys[_key] = arguments[_key];
     }
 
-    _createClass(Connection, [{
-        key: 'r',
-        value: function r(cmd) {
-            var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+    var c = manykeys;
+    c.unshift('MGET');
+    return request(c);
+}
 
-            return request([cmd].concat(params), this.endPoint);
-        }
-    }, {
-        key: 'auth',
-        value: function auth(password) {
-            return this.r('AUTH', password);
-        }
-    }, {
-        key: 'echo',
-        value: function echo(m) {
-            return this.r('ECHO', m);
-        }
-    }, {
-        key: 'ping',
-        value: function ping(m) {
-            return this.r('PING', m);
-        }
-    }, {
-        key: 'wait',
-        value: function wait(numslaves, timeout) {
-            return this.r('WAIT', [numslaves, timeout]);
-        }
-    }]);
+function mset(obj) {
+    var c = asPairArray(obj);
+    c.unshift('MSET');
+    return request(c);
+}
 
-    return Connection;
-}();
+function msetnx(obj) {
+    var c = asPairArray(obj);
+    c.unshift('MSETNX');
+    return request(c);
+}
 
-var Generic = exports.Generic = function () {
-    function Generic() {
-        var endPoint = arguments.length <= 0 || arguments[0] === undefined ? "/" : arguments[0];
-
-        _classCallCheck(this, Generic);
-
-        this.endPoint = endPoint;
+function del() {
+    for (var _len2 = arguments.length, keys = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        keys[_key2] = arguments[_key2];
     }
 
-    _createClass(Generic, [{
-        key: 'r',
-        value: function r(cmd) {
-            var params = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+    var c = keys;
+    c.unshift('DEL');
+    return request(c);
+}
 
-            return request([cmd].concat(params), this.endPoint);
-        }
-    }, {
-        key: 'mget',
-        value: function mget() {
-            for (var _len = arguments.length, manykeys = Array(_len), _key = 0; _key < _len; _key++) {
-                manykeys[_key] = arguments[_key];
-            }
+function keysMatching() {
+    var pattern = arguments.length <= 0 || arguments[0] === undefined ? '*' : arguments[0];
 
-            return this.r('MGET', manykeys);
-        }
-    }, {
-        key: 'mset',
-        value: function mset(obj) {
-            return this.r('MSET', asPairArray(obj));
-        }
-    }, {
-        key: 'msetnx',
-        value: function msetnx(obj) {
-            return this.r('MSETNX', asPairArray(obj));
-        }
-    }, {
-        key: 'keysMatching',
-        value: function keysMatching() {
-            var pattern = arguments.length <= 0 || arguments[0] === undefined ? '*' : arguments[0];
+    return request(['KEYS', pattern]);
+}
 
-            return this.r('KEYS', pattern);
-        }
-    }, {
-        key: 'randomKey',
-        value: function randomKey() {
-            return this.r('RANDOMKEY');
-        }
-    }, {
-        key: 'select',
-        value: function select(index) {
-            return this.r('SELECT', index);
-        }
-    }]);
+function randomKey() {
+    return request(['RANDOMKEY']);
+}
 
-    return Generic;
-}();
+function select(index) {
+    return request(['SELECT', index]);
+}
 
 var Key = exports.Key = function () {
     function Key(k) {
-        var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
-
         _classCallCheck(this, Key);
 
         this.k = k;
-        this.endPoint = endPoint;
     }
 
     _createClass(Key, [{
         key: 'r',
         value: function r() {
-            for (var _len2 = arguments.length, cmdparams = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                cmdparams[_key2] = arguments[_key2];
+            for (var _len3 = arguments.length, cmdparams = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                cmdparams[_key3] = arguments[_key3];
             }
 
             cmdparams.splice(1, 0, this.k);
-            return request(cmdparams, this.endPoint);
+            return request(cmdparams);
         }
     }, {
         key: 'append',
@@ -371,25 +344,31 @@ var Key = exports.Key = function () {
     return Key;
 }();
 
+function objectFromKVArray(A) {
+    // eslint-disable-line no-unused-vars
+    if (A.length === 0) return {};
+    var o = {};
+    for (var i = 1, l = A.length; i < l; i += 2) {
+        o[i - 1] = i;
+    }return o;
+}
+
 var Hash = exports.Hash = function () {
     function Hash(k) {
-        var endPoint = arguments.length <= 1 || arguments[1] === undefined ? "/" : arguments[1];
-
         _classCallCheck(this, Hash);
 
         this.k = k;
-        this.endPoint = endPoint;
     }
 
     _createClass(Hash, [{
         key: 'r',
         value: function r() {
-            for (var _len3 = arguments.length, cmdparams = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                cmdparams[_key3] = arguments[_key3];
+            for (var _len4 = arguments.length, cmdparams = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                cmdparams[_key4] = arguments[_key4];
             }
 
             cmdparams.splice(1, 0, this.k);
-            return request(cmdparams, this.endPoint);
+            return request(cmdparams);
         }
     }, {
         key: 'deleteAll',
@@ -401,14 +380,17 @@ var Hash = exports.Hash = function () {
         value: function del(f) {
             return this.r('HDEL', f);
         }
+
+        // will return {} if key does not exist!
+
     }, {
         key: 'getAll',
         value: function getAll() {
             return this.r('HGETALL');
         }
     }, {
-        key: 'getField',
-        value: function getField(f) {
+        key: 'get',
+        value: function get(f) {
             return this.r('HGET', f);
         }
     }, {
@@ -417,11 +399,12 @@ var Hash = exports.Hash = function () {
             return this.r('HSETNX', f, v);
         }
     }, {
-        key: 'setAll',
-        value: function setAll(obj) {
-            var k = this.k;
-            var mycmd = ['MULTI', 'DEL', k, 'HMSET', k].concat(asPairArray(obj), 'EXEC');
-            return request(mycmd, this.endPoint);
+        key: 'set',
+        value: function set(obj) {
+            var that = this;
+            return this.deleteAll().then(function () {
+                return that.r.apply(that, ['HMSET'].concat(_toConsumableArray(asPairArray(obj))));
+            });
         }
     }, {
         key: 'update',

@@ -1,18 +1,18 @@
 /* global: fetch */
 
-function checkStatus(response) {
-  if (response.status >= 200 && response.status < 300)
-      return response;
+export function checkStatus(response) {
+    if (response.status >= 200 && response.status < 300)
+        return response;
     let error = new Error(response.statusText);
     error.response = response;
     throw error;
 }
 
-function stringifyObjects(x){
+export function stringifyObjects(x){
     return (typeof(x)==="object")? JSON.stringify(x): x;
 }
 
-function tryParseObjects(x){
+export function tryParseObjects(x){
     if (x===null) return null;
     if (x===undefined) return undefined;
     const type = typeof(x);
@@ -43,32 +43,42 @@ function tryParseObjects(x){
  * @return {Object} Promise that resolves to webdis requested data or status
  */
 
-let method = "POST";
+const defaults = {
+    method: "POST",
+    endPoint: "/",
+    preProcess: ((cmdAndParams)=>cmdAndParams
+                 .map(stringifyObjects)
+                 .map(encodeURIComponent)
+                 .join("/")),
+    postProcess: tryParseObjects,
+    credentials: 'same-origin',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+};
 
-export function setMethod(m){
-    method = m;
+let options = Object.assign({}, defaults);
+
+export function configure(o){
+    options = Object.assign(options,o);
 }
 
-export function request(command, endPoint="/"){
-    const commandURL =  (command
-                         .map(stringifyObjects)
-                         .map(encodeURIComponent)
-                         .join("/")
-                        );
-    const options = {
-        method,
-        credentials: 'same-origin',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
+export function request(commandArray, endPoint=options.endPoint){
+    const commandURL = options.preProcess(commandArray);
+    const requestOptions = {
+        method: options.method,
+        credentials: options.credentials,
+        headers: options.headers
     };
-    if (method === "POST") options.body = commandURL;
-    const webdisPromise =  (method === "GET")? fetch(endPoint+commandURL, options) : fetch(endPoint,options);
-    return (webdisPromise.then(checkStatus)
+    if (requestOptions.method === "POST") 
+        requestOptions.body = commandURL;
+    const webdisPromise =  (requestOptions.method === "GET")? fetch(endPoint+commandURL, requestOptions) : fetch(endPoint,requestOptions);
+    return (webdisPromise
+            .then(checkStatus)
             .then((response)=>response.json())
-            .then((data)=>data[command[0]])
-            .then(tryParseObjects)
+            .then((reply)=>reply[commandArray[0]])
+            .then(options.postProcess)
            );
 }
 
@@ -80,80 +90,56 @@ function asPairArray(obj){
     return result;
 }
 
-export class Connection {
-    constructor(endPoint="/"){
-        this.endPoint=endPoint;
-    }
-
-    r(cmd,params=[]){ 
-        return request([cmd].concat(params),this.endPoint);
-    }
-    
-    auth(password){ 
-        return this.r('AUTH',password);
-    }
-
-    echo(m){ 
-        return this.r('ECHO',m);
-    }
-    
-    ping(m){ 
-        return this.r('PING',m);
-    }
-
-    wait(numslaves,timeout){
-        return this.r('WAIT',[numslaves,timeout]);
-    }
-        
+export function echo(m){ 
+        return request(['ECHO',m]);
 }
 
-export class Generic {
+/* ping omitted because does not return same format as others */    
 
-    constructor(endPoint="/"){
-        this.endPoint = endPoint;
-    }
+export function mget(...manykeys){
+    const c = manykeys;
+    c.unshift('MGET');
+    return request(c);
+}
 
-    r(cmd,params=[]){
-        return request(
-            [cmd].concat(params),
-            this.endPoint);
-    }
+export function mset(obj){ 
+    const c = asPairArray(obj);
+    c.unshift('MSET');
+    return request(c);
+}
 
-    mget(...manykeys){ 
-        return this.r('MGET', manykeys);
-    }
+export function msetnx(obj){
+    const c = asPairArray(obj);
+    c.unshift('MSETNX');
+    return request(c);
+}
 
-    mset(obj){ 
-        return this.r('MSET', asPairArray(obj));
-    }
+export function del(...keys){
+    const c = keys;
+    c.unshift('DEL');
+    return request(c);
+}
 
-    msetnx(obj){
-        return this.r('MSETNX', asPairArray(obj));
-    }
+export function keysMatching(pattern='*'){ 
+    return request(['KEYS', pattern]);
+}
 
-    keysMatching(pattern='*'){ 
-        return this.r('KEYS', pattern);
-    }
+export function randomKey(){
+    return request(['RANDOMKEY']);
+}
 
-    randomKey(){
-        return this.r('RANDOMKEY');
-    }
-
-    select(index){ 
-        return this.r('SELECT',index);
-    }
-    
+export function select(index){ 
+    return request(['SELECT',index]);
 }
     
 export class Key {
-    constructor(k, endPoint="/"){
+    constructor(k){
         this.k = k;
-        this.endPoint = endPoint;
     }
 
     r(...cmdparams){
         cmdparams.splice(1,0,this.k);
-        return request(cmdparams, this.endPoint);
+        return request(cmdparams);
     }
     
     append(v){ 
@@ -281,15 +267,22 @@ export class Key {
 
 }
 
+function objectFromKVArray(A){ // eslint-disable-line no-unused-vars
+    if (A.length===0) return {};
+    const o = {};
+    for(let i=1,l=A.length;i<l;i+=2)
+	o[i-1]=i;
+    return o;
+} 
+
 export class Hash {
-    constructor(k, endPoint="/"){ 
+    constructor(k){ 
         this.k = k;
-        this.endPoint = endPoint;
     }
 
     r(...cmdparams){
         cmdparams.splice(1,0,this.k);
-        return request(cmdparams, this.endPoint);
+        return request(cmdparams);
     }
 
 
@@ -301,11 +294,13 @@ export class Hash {
         return this.r('HDEL',f);
     }
 
+    // will return {} if key does not exist!
+
     getAll(){
         return this.r('HGETALL');
     }
     
-    getField(f){ 
+    get(f){ 
         return this.r('HGET',f);
     }
 
@@ -313,16 +308,15 @@ export class Hash {
         return this.r('HSETNX',f,v);
     }
 
-    setAll(obj){        
-        const k = this.k;
-        const mycmd = ['MULTI','DEL',k,'HMSET',k].concat(asPairArray(obj), 'EXEC');
-        return request(mycmd, this.endPoint);
-    }
-    
-    update(obj){
-        return this.r('HMSET', ...asPairArray(obj));
+    set(obj){ 
+	const that = this;
+        return this.deleteAll().then(function(){ return that.r('HMSET',...asPairArray(obj)); });
     }
 
+    update(obj){
+	return this.r('HMSET',...asPairArray(obj));
+    }
+    
     incrby(f,inc){
         return this.r('HINCRBY',f,inc);
     }

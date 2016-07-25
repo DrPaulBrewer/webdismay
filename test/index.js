@@ -4,15 +4,15 @@
 import 'es5-shim';
 import 'es6-shim';
 import 'whatwg-fetch';
+import deepEqual from "deep-equal";
 import * as W from "../src/index.js";
 
-W.setMethod("GET"); // there might be an issue with http-proxy and POST as run by karma test runner
+W.configure({
+    method: "GET"
+}); // there might be an issue with http-proxy and POST as run by karma test runner
 
 const totalTs = 100;
-
-const delCommand = ['DEL'].concat(Array(totalTs).fill(0).map((v,i)=>('t'+i)));
-
-W.request(delCommand); // deletes everything
+W.del(...Array(totalTs).fill(0).map((v,i)=>('t'+i))); // delete the keys from previous test run
 
 /* two part async test runner
  * @param {string} n name -- name of test
@@ -31,6 +31,7 @@ function tryConfirm({n, x, i, f, p, params, check, g, confirm}){
         const done=assert.async();
         function onError(e){
             assert.ok(false, "error: "+e);
+            done();
         }
         function step3(gResult){
             assert.ok(confirm(gResult,p), g+' yielded '+JSON.stringify(gResult));
@@ -43,14 +44,21 @@ function tryConfirm({n, x, i, f, p, params, check, g, confirm}){
             else
                 done();
         }
-	const fparams = (Array.isArray(params))? params: [p];
+        let fparams;
+        if (Array.isArray(params)){
+            fparams = params;
+        } else if (p===undefined){
+            fparams = [];
+        } else {
+            fparams = [p];
+        }
         function atest(){
             x[f](...fparams).then(step2, onError);
         }
         if (i===undefined)
             atest();
         else 
-            x.set(i).then(atest);
+            x.set(i).then(atest, onError);
     });
 }
 
@@ -71,13 +79,69 @@ QUnit.test("fetch exists", function(assert){
     assert.ok((typeof(window.fetch) === 'function'), "window.fetch is a function");
 });
 
+
 function same(r,p){
-    return JSON.stringify(r)===JSON.stringify(p);
+    return deepEqual(r,p,true);
 }
 
 function r0(r){
     return (r && r[0]);
 }
+
+tryConfirm({
+    n: "echo test",
+    x: W,
+    f: "echo",
+    p: "Hello World",
+    check: same
+});
+
+tryConfirm({
+    n: "mset t1, t2, t3 ",
+    x: W,
+    f: "mset",
+    p: {t1: "Larry", t2: "Moe", t3:"Curly"},
+    check: r0
+});
+
+tryConfirm({
+    n: "mget t1, t2, t3 ",
+    x: W,
+    f: "mget",
+    params: ['t1','t2','t3'],
+    check: (r)=>(r[0]==="Larry" && r[1]==="Moe" && r[2]==="Curly")
+});
+
+tryConfirm({
+    n:"msetnx t1, t2, t3, should fail",
+    x: W,
+    f: "msetnx",
+    p: {t1: "Ma", t2:"Mo", t3:"Ja"},
+    check: (r)=>(r===0)
+});
+
+tryConfirm({
+    n:"msetnx t4, t5, t6, should succeed",
+    x: W,
+    f: "msetnx",
+    p: {t4: "Ma", t5:"Mo", t6:"Ja"},
+    check: (r)=>(r===1)
+});
+
+tryConfirm({
+    n:"keysMatching t* should include recently set t1,t2,t3,t4,t5,t6",
+    x: W,
+    f: "keysMatching",
+    p: "t*",
+    check: (r)=>([1,2,3,4,5,6].every((n)=>(r.indexOf("t"+n)>=0)))
+});
+
+tryConfirm({
+    n: "randomKey returns something",
+    x: W,
+    f: "randomKey",
+    check: (r)=>(!!r)
+});
 
 tryConfirm({
     n: "set t1 to [1,2,[3,4],{x:5}] and check it",
@@ -187,7 +251,7 @@ tryConfirm({
     g: "get",
     confirm: (r)=>(r==="fizzbuzz")
 });
-    
+
 tryConfirm({
     n: "incr t11 yields 56",
     x: new W.Key("t11"),
@@ -293,4 +357,53 @@ tryConfirm({
 /*
  * Tests for Hash 
  */
+
+tryConfirm({
+    n: "create a Hash, check the fields",
+    x: new W.Hash("t20"),
+    f: "set",
+    p: {foo:"bar",baz:3},
+    check: r0,
+    g: "getAll",
+    confirm: same
+});
+
+tryConfirm({
+    n: "set a Hash to some other fields, check that old fields are gone, only new fields present",
+    x: new W.Hash("t20"),
+    f: "set",
+    p: {"crazy": "Larry", "mean": "Moe", "funny": "Curly"},
+    check: r0,
+    g: "getAll",
+    confirm: same
+});
+
+tryConfirm({
+    n: "del 'mean', check remaining fields",
+    x: new W.Hash("t20"),
+    f: "del",
+    p: "mean",
+    check: (r)=>r===1,
+    g: "getAll",
+    confirm: (r)=>(r.crazy && r.funny && !r.mean)
+});
+
+tryConfirm({
+    n: "update hash t20 field z, set to 20, check all fields",
+    x: new W.Hash("t20"),
+    f: "update",
+    p: {z:20},
+    check: (r)=>(r===1),
+    g: "getAll",
+    confirm: (r)=>(r.crazy && r.funny && !r.mean && (r.z===20))
+});
+
+tryConfirm({
+    n: "deleteAll removes t20 hash, getall returns {}",
+    x: new W.Hash("t20"),
+    f: "deleteAll",
+    check: (r)=>(r===1),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,{},true))
+});
 
