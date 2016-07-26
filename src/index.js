@@ -1,5 +1,14 @@
 /* global: fetch */
 
+/**
+ *
+ * Check for 2xx response.status after fetch; used by request()
+ *
+ * @param {Object} response, presumably from fetch.then()
+ * @return {Object} response if 2xx
+ * @throws {Error} with response.statusText if not 2xx
+ */
+
 export function checkStatus(response) {
     if (response.status >= 200 && response.status < 300)
         return response;
@@ -8,9 +17,21 @@ export function checkStatus(response) {
     throw error;
 }
 
+/**
+ * Pass non-objects unaltered, JSON.stringify objects/arrays.  Shallow.  Used by request preProcessing
+ * @param {Object|Array|number|string} x Input
+ * @return {number|string} x JSON.stringified input if input is object/array, otherwise pass input
+ */
+
 export function stringifyObjects(x){
     return (typeof(x)==="object")? JSON.stringify(x): x;
 }
+
+/**
+ * JSON.parse stringified response into objects, pass unparseable content as is. Used as default request postProcessing.
+ * @param {Object|Array|number|string} x Input
+ * @return {Object|Array|number|string} parsed output
+ */
 
 export function tryParseObjects(x){
     if (x===null) return null;
@@ -35,14 +56,6 @@ export function tryParseObjects(x){
     return x;
 }
 
-/**
- * send a command array to webdis, return a Promise of a javascript object response.
- * Put each redis command parameter in its own slot in the command array, ideally it will be automatically stringified and encoded as needed.  The response is JSON parsed 
- * @param {Array} command Array of command parameters.
- * @param {string} [endPoint="/"] endpoint URL for POST to webdis
- * @return {Object} Promise that resolves to webdis requested data or status
- */
-
 const defaults = {
     method: "POST",
     endPoint: "/",
@@ -60,9 +73,30 @@ const defaults = {
 
 let options = Object.assign({}, defaults);
 
+/**
+ * set common options for all webdis/redis requests 
+ * @param {Object} o configuration options
+ * @param {string} [o.method="POST"] request HTTP method may be set to GET or POST.  Some test frameworks (e.g.karma) seem to have difficulty proxying POST and need GET.  POST is recommended for production to avoid cache issues.
+ * @param {string} [o.endPoint="/"] fetch URL where webdis is listening for requests
+ * @param {string} [o.credentials="same-origin"] fetch option determining whether to send http-auth or other credentials with each request
+ * @param {Object} [o.headers] fetch option setting headers (e.g. accept, content-type) for each fetch.  Default sets headers for 'application/json'
+ * @param {Function(cmdAndParams:Array):string} [o.preProcess] function to determine a URL representing an array containing a redis command string and parameters
+ * @param {Function(response:Object):Object} [o.postProcess] function to transform response objects received by fetch, after transforming to JSON and dereferencing webdis object return
+ * @return {Object} resulting configuration settings
+ */
+
 export function configure(o){
-    options = Object.assign(options,o);
+    options = Object.assign({},defaults,o);
+    return options;
 }
+
+/**
+ * send a command array to webdis, return a Promise of a javascript object response.
+ * Put each redis command parameter in its own slot in the command array, ideally it will be automatically stringified and encoded as needed.  The response object depends on which redis command was called.
+ * @param {Array} command Array of command parameters.
+ * @param {string} [endPoint=options.endPoint] endpoint URL for POST to webdis
+ * @return {Promise<Object,MyError>} Promise that resolves to webdis requested data or status
+ */
 
 export function request(commandArray, endPoint=options.endPoint){
     const commandURL = options.preProcess(commandArray);
@@ -90,11 +124,23 @@ function asPairArray(obj){
     return result;
 }
 
+/**
+ * echo message
+ * @param {string} message
+ * @return {Promise<string,Error>} a promise resolving to the echoed message as the server returns it
+ */
+
 export function echo(m){ 
         return request(['ECHO',m]);
 }
 
-/* ping omitted because does not return same format as others */    
+/* ping omitted because does not return same format as others */
+
+/**
+ * read multiple redis keys via MGET 
+ * @param {...string} redis keys to read
+ * @return {Promise<string[],Error>} a promise resolving to an array containing the read keys
+ */
 
 export function mget(...manykeys){
     const c = manykeys;
