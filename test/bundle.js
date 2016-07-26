@@ -6490,9 +6490,23 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         return new Key(k);
     }
 
+    /**
+     * Methods for manipulating a hash on the redis server
+     */
+
+    /** 
+     * Convenience function equivalent to new Hash(k)
+     * @param {string} k Key name
+     * @return {Object} equivalent to new Hash(k)
+     */
+
     function hash(k) {
         return new Hash(k);
     }
+
+    /**
+     * Methods for manipulating a List on the server
+     */
 
     function list(k) {
         return new List(k);
@@ -6582,7 +6596,7 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 /**
                  * Instantly create a key hander associated with a specific key, sends no requests to the server until a method is called.
                  * Includes methods for most redis commands for "Key" and "String"
-                 * @param k Key
+                 * @param {string} k Key
                  */
 
                 function Key(k) {
@@ -6884,11 +6898,22 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
             _export('Key', Key);
 
             Hash = (function () {
+
+                /**
+                 * Instantly create a hash handler associated with a specific hash, via its key, sends no requests to the server until a method is called.
+                 * @param {string} k Key where a Hash is stored, or to be stored, on the server
+                 */
+
                 function Hash(k) {
                     _classCallCheck(this, Hash);
 
                     this.k = k;
                 }
+
+                /**
+                 * splices key into request as 1st parameter of command
+                 * @private 
+                 */
 
                 _createClass(Hash, [{
                     key: 'r',
@@ -6900,34 +6925,73 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                         cmdparams.splice(1, 0, this.k);
                         return request(cmdparams);
                     }
+
+                    /**
+                     * delete the entire hash (via DEL)
+                     * @return {Promise<number,Error>} response is 1 if the hash was deleted, 0 if not
+                     */
+
                 }, {
                     key: 'deleteAll',
                     value: function deleteAll() {
                         return this.r('DEL');
                     }
+
+                    /**
+                     * delete a field from the hash (via HDEL)
+                     * @param {string} f name of field to be deleted
+                     * @return {Promise<number,Error>} response is 1 if field is deleted, 0 if non-existent
+                     */
+
                 }, {
                     key: 'del',
                     value: function del(f) {
                         return this.r('HDEL', f);
                     }
 
-                    // will return {} if key does not exist!
+                    /**
+                     * returns the entire hash as a javascript Object, and will return {} if the hash does not exist (via HGETALL)
+                     * @return {Promise<Object, Error>} response is the requested data
+                     */
 
                 }, {
                     key: 'getAll',
                     value: function getAll() {
                         return this.r('HGETALL');
                     }
+
+                    /** 
+                     * return the selected field from the hash
+                     * @param {string} f The field name
+                     * @return {Promise<string, Error>} response is the requested field's value
+                     */
+
                 }, {
                     key: 'get',
                     value: function get(f) {
                         return this.r('HGET', f);
                     }
+
+                    /** 
+                     * set an undefined field to a value, but has no effect if field exists (via HSETNX)
+                     * @param {string} f The field name
+                     * @param {string} v The field value (might be a stringified object, etc.)
+                     * @return {Promise<number,Error>} response is 1 if field f set to v, 0 if not
+                     */
+
                 }, {
                     key: 'setnx',
                     value: function setnx(f, v) {
                         return this.r('HSETNX', f, v);
                     }
+
+                    /**
+                     * set all fields of a hash sourced from a Javascript object, deletes entire hash first and recreates (via DEL and HMSET).
+                     * Clients reading at the same time may get either an empty object or the entire object.
+                     * @param obj Object containing fields and values to set hash
+                     * @return {Promise<Array,Error>} status response
+                     */
+
                 }, {
                     key: 'set',
                     value: function set(obj) {
@@ -6936,31 +7000,72 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                             return that.r.apply(that, ['HMSET'].concat(_toConsumableArray(asPairArray(obj))));
                         });
                     }
+
+                    /**
+                     * merges fields and values from a Javacript object into the hash (via HMSET)
+                     * @param obj Object containing fields and values to merge into hash
+                     * @return {Promise<Array,Error>} status response
+                     */
+
                 }, {
                     key: 'update',
                     value: function update(obj) {
                         return this.r.apply(this, ['HMSET'].concat(_toConsumableArray(asPairArray(obj))));
                     }
+
+                    /**
+                     * add amount to value of field f and return the new value (via HINCRBY)
+                     * @param f field name
+                     * @param amount Integer amount to add 
+                     * @return {Promise<number,Error>} response is the new value
+                     */
+
                 }, {
                     key: 'incrBy',
-                    value: function incrBy(f, inc) {
-                        return this.r('HINCRBY', f, inc);
+                    value: function incrBy(f, amount) {
+                        return this.r('HINCRBY', f, amount);
                     }
+
+                    /**
+                     * add amount to value of field f and return the new value (via HINCRBYFLOAT)
+                     * @param f field name
+                     * @param amount Floating-point amount to add 
+                     * @return {Promise<number,Error>} response is the new value
+                     */
+
                 }, {
                     key: 'incrByFloat',
-                    value: function incrByFloat(f, floatInc) {
-                        return this.r('HINCRBYFLOAT', f, floatInc);
+                    value: function incrByFloat(f, amount) {
+                        return this.r('HINCRBYFLOAT', f, amount);
                     }
+
+                    /**
+                     * list the fields of this hash (via HKEYS)
+                     * @return {Promise<string[], Error>} response is array list of fields
+                     */
+
                 }, {
                     key: 'keys',
                     value: function keys() {
                         return this.r('HKEYS');
                     }
+
+                    /**
+                     * list the values of this hash (via HVALS)
+                     * @return {Promise<string[], Error>} response is array list of values
+                     */
+
                 }, {
                     key: 'vals',
                     value: function vals() {
                         return this.r('HVALS');
                     }
+
+                    /**
+                     * number of fields in the hash (via HLEN)
+                     * @return {Promise<number, Error>} response is number of fields in the hash
+                     */
+
                 }, {
                     key: 'len',
                     value: function len() {
@@ -6974,11 +7079,22 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
             _export('Hash', Hash);
 
             List = (function () {
+
+                /**
+                 * Instantly create a list handler associated with a specific list, via its key, sends no requests to the server until a method is called.
+                 * @param {string} k Key where a List is stored, or to be stored, on the server
+                 */
+
                 function List(k) {
                     _classCallCheck(this, List);
 
                     this.k = k;
                 }
+
+                /**
+                 * splices key name into command
+                 * @private
+                 */
 
                 _createClass(List, [{
                     key: 'r',
@@ -6990,49 +7106,101 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                         cmdparams.splice(1, 0, this.k);
                         return request(cmdparams);
                     }
+
+                    /**
+                     * get the value of element i (via LINDEX)
+                     * @param i index to fetch
+                     * @return {Promise<string, Error>} response is value of element i
+                     */
+
                 }, {
                     key: 'get',
                     value: function get(i) {
                         return this.r('LINDEX', i);
                     }
+
+                    /**
+                     * get the entire list (via LRANGE)
+                     * @return {Promise<Array, Error>} response is array containing entire list
+                     */
+
                 }, {
                     key: 'getAll',
                     value: function getAll() {
                         return this.r('LRANGE', 0, -1);
                     }
+
+                    /**
+                     * insert an element immediately before the first element equal to pivot  (via LINSERT)
+                     * @param {string} pivot value to find
+                     * @param {string} v value to insert
+                     * @return {Promise<number,Error>} response is new list length
+                     */
+
                 }, {
                     key: 'insertBefore',
                     value: function insertBefore(pivot, v) {
                         return this.r('LINSERT', 'BEFORE', pivot, v);
                     }
+
+                    /**
+                     * insert an element immediately after the first element equal to pivot  (via LINSERT)
+                     * @param {string} pivot value to find
+                     * @param {string} v value to insert
+                     * @return {Promise<number,Error>} response is new list length
+                     */
+
                 }, {
                     key: 'insertAfter',
-                    value: function insertAfter(pivot) {
-                        for (var _len6 = arguments.length, vals = Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
-                            vals[_key6 - 1] = arguments[_key6];
-                        }
-
-                        return this.r.apply(this, ['LINSERT', 'AFTER', pivot].concat(vals));
+                    value: function insertAfter(pivot, v) {
+                        return this.r('LINSERT', 'AFTER', pivot, v);
                     }
+
+                    /**
+                     * length of list (via LLEN)
+                     * @return {Promise<number,Error>} response is the length of the list
+                     */
+
                 }, {
                     key: 'len',
                     value: function len() {
                         return this.r('LLEN');
                     }
+
+                    /**
+                     * remove element 0 from the list and return it, and re-index the list (via LPOP) 
+                     * @return {Promise<string,Error>} response is the removed element 0
+                     */
+
                 }, {
                     key: 'shift',
                     value: function shift() {
                         return this.r('LPOP');
                     }
+
+                    /**
+                     * append to beginning of list, in reverse order, and re-index the list (via LPUSH)
+                     * @param {...string} values values to be appeded onto the head of the list
+                     * @return {Promise<number, Error>} response is the new length of the list
+                     */
+
                 }, {
                     key: 'unshift',
                     value: function unshift() {
-                        for (var _len7 = arguments.length, values = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-                            values[_key7] = arguments[_key7];
+                        for (var _len6 = arguments.length, values = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                            values[_key6] = arguments[_key6];
                         }
 
                         return this.r.apply(this, ['LPUSH'].concat(values));
                     }
+
+                    /**
+                     * return all or part of the list, list is unchanged (via LRANGE)
+                     * @param {number} [from=0] index to begin slice 
+                     * @param {number} [to=-1] index to end slice
+                     * @return {Promise<Array, Error>} response is the requested array of data
+                     */
+
                 }, {
                     key: 'slice',
                     value: function slice() {
@@ -7041,6 +7209,14 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r('LRANGE', from, to);
                     }
+
+                    /**
+                     * remove elements with value v (via LREM)
+                     * @param {string} v the value to remove
+                     * @param {nunber} [count=0] 0 for all occurrences, otherwise limit the number of removals
+                     * @return {Promise<number,Errpr>} response is the number removed
+                     */
+
                 }, {
                     key: 'remove',
                     value: function remove(v) {
@@ -7048,16 +7224,31 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r('LREM', count, v);
                     }
+
+                    /**
+                     * set element i to value v (via LSET)
+                     * @param {number} i index of element to set
+                     * @param {string} v value
+                     * @return {Promise<Array,Error>} status response
+                     */
+
                 }, {
                     key: 'set',
                     value: function set(i, v) {
                         return this.r('LSET', i, v);
                     }
+
+                    /**
+                     * set list to supplied values (via DEL and RPUSH)
+                     * @param {...string} values Values to set
+                     * @return {Promise<number,Error>} response is new length of list
+                     */
+
                 }, {
                     key: 'setAll',
                     value: function setAll() {
-                        for (var _len8 = arguments.length, values = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-                            values[_key8] = arguments[_key8];
+                        for (var _len7 = arguments.length, values = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                            values[_key7] = arguments[_key7];
                         }
 
                         var that = this;
@@ -7065,6 +7256,14 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                             return that.push.apply(that, values);
                         });
                     }
+
+                    /**
+                     * trim list to only the indicated range of indexes and reindex (via LTRIM)
+                     * @param {number} from the first index of elements to keep
+                     * @param {number} to the last index of elements to keep, inclusive 
+                     * @return {Promise<Array,Error>} status response
+                     */
+
                 }, {
                     key: 'trim',
                     value: function trim() {
@@ -7073,21 +7272,41 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r('LTRIM', from, to);
                     }
+
+                    /**
+                     * remove the tail from the list and return it (via RPOP)
+                     * @return {Promise<string,Error>} response is the tail value from the list
+                     */
+
                 }, {
                     key: 'pop',
                     value: function pop() {
                         return this.r('RPOP');
                     }
+
+                    /**
+                     * remove the tail from the list and append (unshift) it as the head of another list (via RPOPLPUSH)
+                     * @param {string} destination key to List receiving the element
+                     * @return {Promise<Array,Error>} status response
+                     */
+
                 }, {
                     key: 'popTo',
                     value: function popTo(destination) {
                         return this.r('RPOPLPUSH', destination);
                     }
+
+                    /**
+                     * append values to the tail of the list (via RPUSH)
+                     * @param {...string} values to append to the tail of the list
+                     * @return {Promise<number,Error>} response is new length of the list
+                     */
+
                 }, {
                     key: 'push',
                     value: function push() {
-                        for (var _len9 = arguments.length, values = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-                            values[_key9] = arguments[_key9];
+                        for (var _len8 = arguments.length, values = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                            values[_key8] = arguments[_key8];
                         }
 
                         return this.r.apply(this, ['RPUSH'].concat(values));
@@ -7109,8 +7328,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 _createClass(Rset, [{
                     key: 'r',
                     value: function r() {
-                        for (var _len10 = arguments.length, cmdparams = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-                            cmdparams[_key10] = arguments[_key10];
+                        for (var _len9 = arguments.length, cmdparams = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+                            cmdparams[_key9] = arguments[_key9];
                         }
 
                         cmdparams.splice(1, 0, this.k);
@@ -7154,8 +7373,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 }, {
                     key: 'add',
                     value: function add() {
-                        for (var _len11 = arguments.length, vals = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-                            vals[_key11] = arguments[_key11];
+                        for (var _len10 = arguments.length, vals = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+                            vals[_key10] = arguments[_key10];
                         }
 
                         return this.r.apply(this, ['SADD'].concat(vals));
@@ -7165,8 +7384,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                     value: function set() {
                         var _this = this;
 
-                        for (var _len12 = arguments.length, vals = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-                            vals[_key12] = arguments[_key12];
+                        for (var _len11 = arguments.length, vals = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+                            vals[_key11] = arguments[_key11];
                         }
 
                         return this.clear().then(function () {
@@ -7176,8 +7395,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 }, {
                     key: 'remove',
                     value: function remove() {
-                        for (var _len13 = arguments.length, vals = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-                            vals[_key13] = arguments[_key13];
+                        for (var _len12 = arguments.length, vals = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+                            vals[_key12] = arguments[_key12];
                         }
 
                         return this.r.apply(this, ['SREM'].concat(vals));
@@ -7190,8 +7409,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 }, {
                     key: 'withoutSets',
                     value: function withoutSets() {
-                        for (var _len14 = arguments.length, skeys = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-                            skeys[_key14] = arguments[_key14];
+                        for (var _len13 = arguments.length, skeys = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+                            skeys[_key13] = arguments[_key13];
                         }
 
                         return this.r.apply(this, ['SDIFF'].concat(skeys));
@@ -7204,8 +7423,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 }, {
                     key: 'intersection',
                     value: function intersection() {
-                        for (var _len15 = arguments.length, skeys = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-                            skeys[_key15] = arguments[_key15];
+                        for (var _len14 = arguments.length, skeys = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+                            skeys[_key14] = arguments[_key14];
                         }
 
                         return this.r.apply(this, ['SINTER'].concat(skeys));
@@ -7213,8 +7432,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 }, {
                     key: 'fromIntersection',
                     value: function fromIntersection() {
-                        for (var _len16 = arguments.length, skeys = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-                            skeys[_key16] = arguments[_key16];
+                        for (var _len15 = arguments.length, skeys = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+                            skeys[_key15] = arguments[_key15];
                         }
 
                         return this.r.apply(this, ['SINTERSTORE'].concat(skeys));
@@ -7222,8 +7441,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 }, {
                     key: 'union',
                     value: function union() {
-                        for (var _len17 = arguments.length, skeys = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
-                            skeys[_key17] = arguments[_key17];
+                        for (var _len16 = arguments.length, skeys = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+                            skeys[_key16] = arguments[_key16];
                         }
 
                         return this.r.apply(this, ['SUNION'].concat(skeys));
@@ -7231,8 +7450,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 }, {
                     key: 'fromUnion',
                     value: function fromUnion() {
-                        for (var _len18 = arguments.length, skeys = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
-                            skeys[_key18] = arguments[_key18];
+                        for (var _len17 = arguments.length, skeys = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+                            skeys[_key17] = arguments[_key17];
                         }
 
                         return this.r.apply(this, ['SUNIONSTORE'].concat(skeys));

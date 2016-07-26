@@ -222,7 +222,7 @@ export class Key {
     /**
      * Instantly create a key hander associated with a specific key, sends no requests to the server until a method is called.
      * Includes methods for most redis commands for "Key" and "String"
-     * @param k Key
+     * @param {string} k Key
      */
 
     constructor(k){
@@ -472,141 +472,337 @@ export function key(k){
     return new Key(k);
 }
 
+/**
+ * Methods for manipulating a hash on the redis server
+ */
 
 export class Hash {
+
+    /**
+     * Instantly create a hash handler associated with a specific hash, via its key, sends no requests to the server until a method is called.
+     * @param {string} k Key where a Hash is stored, or to be stored, on the server
+     */
+
     constructor(k){ 
         this.k = k;
     }
+
+    /**
+     * splices key into request as 1st parameter of command
+     * @private 
+     */
 
     r(...cmdparams){
         cmdparams.splice(1,0,this.k);
         return request(cmdparams);
     }
 
+    /**
+     * delete the entire hash (via DEL)
+     * @return {Promise<number,Error>} response is 1 if the hash was deleted, 0 if not
+     */
 
     deleteAll(){
         return this.r('DEL');
     }
 
+    /**
+     * delete a field from the hash (via HDEL)
+     * @param {string} f name of field to be deleted
+     * @return {Promise<number,Error>} response is 1 if field is deleted, 0 if non-existent
+     */
+
     del(f){
         return this.r('HDEL',f);
     }
-
-    // will return {} if key does not exist!
+    
+    /**
+     * returns the entire hash as a javascript Object, and will return {} if the hash does not exist (via HGETALL)
+     * @return {Promise<Object, Error>} response is the requested data
+     */
 
     getAll(){
         return this.r('HGETALL');
     }
     
+    /** 
+     * return the selected field from the hash
+     * @param {string} f The field name
+     * @return {Promise<string, Error>} response is the requested field's value
+     */
+
     get(f){ 
         return this.r('HGET',f);
     }
+
+    /** 
+     * set an undefined field to a value, but has no effect if field exists (via HSETNX)
+     * @param {string} f The field name
+     * @param {string} v The field value (might be a stringified object, etc.)
+     * @return {Promise<number,Error>} response is 1 if field f set to v, 0 if not
+     */
 
     setnx(f,v){
         return this.r('HSETNX',f,v);
     }
 
+    /**
+     * set all fields of a hash sourced from a Javascript object, deletes entire hash first and recreates (via DEL and HMSET).
+     * Clients reading at the same time may get either an empty object or the entire object.
+     * @param obj Object containing fields and values to set hash
+     * @return {Promise<Array,Error>} status response
+     */
+    
     set(obj){ 
         const that = this;
         return this.deleteAll().then(function(){ return that.r('HMSET',...asPairArray(obj)); });
     }
 
+    /**
+     * merges fields and values from a Javacript object into the hash (via HMSET)
+     * @param obj Object containing fields and values to merge into hash
+     * @return {Promise<Array,Error>} status response
+     */
+
     update(obj){
         return this.r('HMSET',...asPairArray(obj));
     }
+
+    /**
+     * add amount to value of field f and return the new value (via HINCRBY)
+     * @param f field name
+     * @param amount Integer amount to add 
+     * @return {Promise<number,Error>} response is the new value
+     */
     
-    incrBy(f,inc){
-        return this.r('HINCRBY',f,inc);
+    incrBy(f,amount){
+        return this.r('HINCRBY',f,amount);
     }
 
-    incrByFloat(f,floatInc){
-        return this.r('HINCRBYFLOAT',f,floatInc);
+    /**
+     * add amount to value of field f and return the new value (via HINCRBYFLOAT)
+     * @param f field name
+     * @param amount Floating-point amount to add 
+     * @return {Promise<number,Error>} response is the new value
+     */
+
+    incrByFloat(f,amount){
+        return this.r('HINCRBYFLOAT',f,amount);
     }
+
+    /**
+     * list the fields of this hash (via HKEYS)
+     * @return {Promise<string[], Error>} response is array list of fields
+     */
 
     keys(){ 
         return this.r('HKEYS');
     }
+    
+    /**
+     * list the values of this hash (via HVALS)
+     * @return {Promise<string[], Error>} response is array list of values
+     */
 
     vals(){
         return this.r('HVALS');
     }
+
+    /**
+     * number of fields in the hash (via HLEN)
+     * @return {Promise<number, Error>} response is number of fields in the hash
+     */
 
     len(){
         return this.r('HLEN');
     }
 }
 
+/** 
+ * Convenience function equivalent to new Hash(k)
+ * @param {string} k Key name
+ * @return {Object} equivalent to new Hash(k)
+ */
+
 export function hash(k){
     return new Hash(k);
 }
 
+/**
+ * Methods for manipulating a List on the server
+ */
 
 export class List {
+
+    /**
+     * Instantly create a list handler associated with a specific list, via its key, sends no requests to the server until a method is called.
+     * @param {string} k Key where a List is stored, or to be stored, on the server
+     */
+
     constructor(k){ 
         this.k = k;
     }
+
+    /**
+     * splices key name into command
+     * @private
+     */
 
     r(...cmdparams){
         cmdparams.splice(1,0,this.k);
         return request(cmdparams);
     }
 
+    /**
+     * get the value of element i (via LINDEX)
+     * @param i index to fetch
+     * @return {Promise<string, Error>} response is value of element i
+     */
+
     get(i){
         return this.r('LINDEX',i);
     }
+
+    /**
+     * get the entire list (via LRANGE)
+     * @return {Promise<Array, Error>} response is array containing entire list
+     */
 
     getAll(){
         return this.r('LRANGE',0,-1);
     }
 
+    /**
+     * insert an element immediately before the first element equal to pivot  (via LINSERT)
+     * @param {string} pivot value to find
+     * @param {string} v value to insert
+     * @return {Promise<number,Error>} response is new list length
+     */
+
     insertBefore(pivot,v){
         return this.r('LINSERT','BEFORE',pivot,v);
     }
 
-    insertAfter(pivot,...vals){
-        return this.r('LINSERT','AFTER',pivot,...vals);
+    /**
+     * insert an element immediately after the first element equal to pivot  (via LINSERT)
+     * @param {string} pivot value to find
+     * @param {string} v value to insert
+     * @return {Promise<number,Error>} response is new list length
+     */
+
+    insertAfter(pivot,v){
+        return this.r('LINSERT','AFTER',pivot,v);
     }
+
+    /**
+     * length of list (via LLEN)
+     * @return {Promise<number,Error>} response is the length of the list
+     */
 
     len(){
         return this.r('LLEN');
     }
 
+    /**
+     * remove element 0 from the list and return it, and re-index the list (via LPOP) 
+     * @return {Promise<string,Error>} response is the removed element 0
+     */
+    
     shift(){
         return this.r('LPOP');
     }
+
+    /**
+     * append to beginning of list, in reverse order, and re-index the list (via LPUSH)
+     * @param {...string} values values to be appeded onto the head of the list
+     * @return {Promise<number, Error>} response is the new length of the list
+     */
 
     unshift(...values){
         return this.r('LPUSH',...values);
     }
 
+    /**
+     * return all or part of the list, list is unchanged (via LRANGE)
+     * @param {number} [from=0] index to begin slice 
+     * @param {number} [to=-1] index to end slice
+     * @return {Promise<Array, Error>} response is the requested array of data
+     */
+
     slice(from=0,to=-1){
         return this.r('LRANGE',from,to);
     }
+
+    /**
+     * remove elements with value v (via LREM)
+     * @param {string} v the value to remove
+     * @param {nunber} [count=0] 0 for all occurrences, otherwise limit the number of removals
+     * @return {Promise<number,Errpr>} response is the number removed
+     */
 
     remove(v,count=0){
         return this.r('LREM',count,v);
     }
     
+    /**
+     * set element i to value v (via LSET)
+     * @param {number} i index of element to set
+     * @param {string} v value
+     * @return {Promise<Array,Error>} status response
+     */
+
     set(i,v){
         return this.r('LSET',i,v);
     }
+    
+    /**
+     * set list to supplied values (via DEL and RPUSH)
+     * @param {...string} values Values to set
+     * @return {Promise<number,Error>} response is new length of list
+     */
 
     setAll(...values){
         const that = this;
         return del(this.k).then(()=>(that.push(...values)));
     }
+
+    /**
+     * trim list to only the indicated range of indexes and reindex (via LTRIM)
+     * @param {number} from the first index of elements to keep
+     * @param {number} to the last index of elements to keep, inclusive 
+     * @return {Promise<Array,Error>} status response
+     */
+     
     
     trim(from=0,to=-1){
         return this.r('LTRIM',from,to);
     }
 
+    /**
+     * remove the tail from the list and return it (via RPOP)
+     * @return {Promise<string,Error>} response is the tail value from the list
+     */
+     
+
     pop(){
         return this.r('RPOP');
     }
 
+    /**
+     * remove the tail from the list and append (unshift) it as the head of another list (via RPOPLPUSH)
+     * @param {string} destination key to List receiving the element
+     * @return {Promise<Array,Error>} status response
+     */
+
     popTo(destination){
         return this.r('RPOPLPUSH',destination);
     }
+
+    /**
+     * append values to the tail of the list (via RPUSH)
+     * @param {...string} values to append to the tail of the list
+     * @return {Promise<number,Error>} response is new length of the list
+     */
 
     push(...values){
         return this.r('RPUSH',...values);
