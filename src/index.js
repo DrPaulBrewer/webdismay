@@ -80,7 +80,7 @@ let options = Object.assign({}, defaults);
  * @param {string} [o.endPoint="/"] fetch URL where webdis is listening for requests
  * @param {string} [o.credentials="same-origin"] fetch option determining whether to send http-auth or other credentials with each request
  * @param {Object} [o.headers] fetch option setting headers (e.g. accept, content-type) for each fetch.  Default sets headers for 'application/json'
- * @param {function(cmdAndParams:Array):string} [o.preProcess] function to determine a URL representing an array containing a redis command string and parameters
+ * @param {function(cmdAndParams:Array):string} [o.preProcess] function to determine a URL-like string representing an array containing a redis command string and parameters. 
  * @param {function(response:Object):Object} [o.postProcess] function to transform response objects received by fetch, after transforming to JSON and dereferencing webdis object return
  * @return {Object} resulting configuration settings
  */
@@ -139,7 +139,7 @@ export function echo(m){
 /**
  * read multiple redis keys via MGET 
  * @param {...string} redis keys to read
- * @return {Promise<string[],Error>} a promise resolving to an array containing the read keys
+ * @return {Promise<string[],Error>} a promise resolving to an array of values
  */
 
 export function mget(...manykeys){
@@ -148,11 +148,23 @@ export function mget(...manykeys){
     return request(c);
 }
 
+/**
+ * set multiple redis keys from javascript object via MSET
+ * @param {Object} obj An object whose keys and (stringified) values are to be set on the redis server 
+ * @return {Promise<Array, Error>} response is an array of [true|false, message]
+ */
+
 export function mset(obj){ 
     const c = asPairArray(obj);
     c.unshift('MSET');
     return request(c);
 }
+
+/**
+ * set multiple redis keys if and only if none of the keys exist; sets all of the keys or none (via MSETNX)
+ * @param {Object} obj An object whose keys and (stringified) values are all to be set or none set.
+ * @return {Promise<number, Error>} response is 1 on success, 0 on failure
+ */
 
 export function msetnx(obj){
     const c = asPairArray(obj);
@@ -160,33 +172,78 @@ export function msetnx(obj){
     return request(c);
 }
 
+/**
+ * deletes keys on the redis server (via DEL)
+ * @param {...string} keys Keys to remove.
+ * @return {Promise<number,Error>} response is number of keys actually deleted
+ */
+
 export function del(...keys){
     const c = keys;
     c.unshift('DEL');
     return request(c);
 }
 
+/**
+ * lists all keys or keys matching a pattern (via KEYS)
+ * @param {String} [pattern='*'] pattern to match
+ * @return {Promise<string[], Error>} response is array of keys
+ */
+
 export function keysMatching(pattern='*'){ 
     return request(['KEYS', pattern]);
 }
+
+/**
+ * return an existing key at random (via RANDOMKEY)
+ * @return {Promise<string, Error>} response is a key chosen at random by the server
+ */
 
 export function randomKey(){
     return request(['RANDOMKEY']);
 }
 
+/**
+ * select which redis database to use for this connection (via SELECT). Untested!
+ * @param index number of database
+ * @return {Promise<Array, Error>} status response
+ */ 
+
 export function select(index){ 
     return request(['SELECT',index]);
 }
+
+/**
+ * Methods for manipulating a single key on the redis server 
+ */
     
 export class Key {
+
+    /**
+     * Instantly create a key hander associated with a specific key, sends no requests to the server until a method is called.
+     * Includes methods for most redis commands for "Key" and "String"
+     * @param k Key
+     */
+
     constructor(k){
         this.k = k;
     }
+
+    /**
+     * splices key into request as 1st parameter of command
+     * @private 
+     */
 
     r(...cmdparams){
         cmdparams.splice(1,0,this.k);
         return request(cmdparams);
     }
+
+    /**
+     * string append to the current value (via APPEND)
+     * @params v value to append
+     * @return {Promise<number, Error>} response is string length of new value
+     */
     
     append(v){ 
         return this.r('APPEND',v);
@@ -194,14 +251,30 @@ export class Key {
 
     // bitfield operations not implemented
 
+    /**
+     * decrement integer key value by 1 and return decremented value (via DECR)
+     * @return {Promise<number,Error>} response is new value after subtracting 1
+     */
+
     decr(){ 
         return this.r('DECR');
     }
+
+    /**
+     * decrement integer key value by integer amount and return decremented value (via DECRBY)
+     * @param amount Amount to subtract.
+     * @return {Promise<number,Error>} response is new value after subtracting amount
+     */
 
     decrBy(amount){
         return this.r('DECRBY',amount);
     }
 
+    /**
+     * delete key (via DEL)
+     * @return {Promise<number,Error>} response is 1 if key deleted, 0 if non-existent
+     */
+    
     del(){ 
         return this.r('DEL');
     }
@@ -210,40 +283,92 @@ export class Key {
      * DUMP seems to do nothing on webdis
      */
 
+    /**
+     * check key existence (via EXISTS)
+     * @return {Promise<number,Error>} response is 1 if key exists, 0 if non-existent
+     */
+
     exists(){ 
         return this.r('EXISTS');
     }
+
+    /**
+     * set a delta timer for autodeletion (via EXPIRE) Untested.
+     * @param seconds Seconds until auto-deletion, subject to redis expiration rules
+     * @return {Promise<number, Error>} response is 1 if timer was set, otherwise 0
+     */
 
     expire(seconds){
         return this.r('EXPIRE',seconds);
     }
 
+    /**
+     * set a unix timestamp for autodeletion (not a JS timestamp, needs to be divided by 1000) (EXPIREAT) Untested.
+     * @param unixts Unix timetamp for autodeletion in seconds since Jan 1, 1970 00:00 UTC
+     * @return {Promise<number,Error>} response is 1 if timer was set, otherwise 0
+     */
+
     expireAt(unixts){ 
         return this.r('EXPIREAT',unixts);
     }
 
-    getRange(starts,ends){ 
+    /**
+     * return a substring of the current string value (via GETRANGE)
+     * @param [starts=0] beginning index (0 is beginning)
+     * @param [ends=-1] ending index (-1 is end of string)
+     * @return {Promise<string, Error>} response is requested substring
+     */
+    
+    getRange(starts=0,ends=-1){ 
         return this.r('GETRANGE',starts,ends);
     }
+    
+    /**
+     * set a new value, return the previous value (via GETSET)
+     * @param v new value
+     * @return {Promise<string, Error>} response is previous value
+     */
     
     getSet(v){ 
         return this.r('GETSET',v);
     }
 
+    /**
+     * get the current value (via GET)
+     * @return {Promise<string, Error>} response is requested value
+     */
+
     get(){ 
         return this.r('GET');
     }
+
+    /**
+     * add 1 to the current value and return the new value (via INCR)
+     * @return {Promise<number, Error>} response is new value
+     */
 
     incr(){
         return this.r('INCR');
     }
 
-    incrBy(increment){ 
-        return this.r('INCRBY',increment);
+    /**
+     * add integer amount to the current value and return the new value (via INCRBY)
+     * @param {number} amount Integer amount to add
+     * @result {Promise<number, Error>} response is new value
+     */
+
+    incrBy(amount){ 
+        return this.r('INCRBY',amount);
     }
 
-    incrByFloat(increment){ 
-        return this.r('INCRBYFLOAT', increment);
+    /**
+     * add floating point amount to the curent value and return the new value (via INCRBYFLOAT)
+     * @param {number} amount Floating point amount to add
+     * @result {Promise<number, Error>} response is new value
+     */
+
+    incrByFloat(amount){ 
+        return this.r('INCRBYFLOAT', amount);
     }
 
     moveToDB(db){ 
@@ -270,6 +395,12 @@ export class Key {
         return this.r('PTTL');
     }
 
+    /**
+     * rename key, potentially clobbering/overwriting key at new name (via RENAME)
+     * @param {string} newk new key
+     * @return {Promise<Array, Error>} status response
+     */
+
     rename(newk){ 
         const myPromise =  this.r('RENAME',newk);
         this.k = newk;
@@ -279,9 +410,11 @@ export class Key {
     // no RENAMENX
     // need .then clause for RENAMENX to adjust this.k conditionally 
 
-    restore(ttl,sval){ 
-        return this.r('RESTORE',ttl,sval);
-    }
+    /**
+     * set the value (via SET)
+     * @param {string} v New value
+     * @return {Promise<Array, Error>} status return
+     */
 
     set(v){ 
         return this.r('SET',v);
@@ -291,13 +424,30 @@ export class Key {
         return this.r('SETEX',sec,v);
     }
 
+    /**
+     * set the value only if the key is undefined (via SETNX)
+     * @param v Value to set if key is undefined
+     * @return {Promise<number, Error>} response is 1 if they key was undefined and the new value was set, 0 if the key was defined and the new vale not set
+     */
+    
     setnx(v){ 
         return this.r('SETNX',v);
     }
 
+    /** 
+     * overwrite string value with new value beginning at character offset
+     * @param {number} offset Offset, where 0 is beginning of string
+     * @return {Promise<number, Error>} response is string length of new value
+     */
+
     setRange(offset,v){ 
         return this.r('SETRANGE',offset,v);
     }
+    
+    /**
+     * get string length of value
+     * @return {Promise<number,Error>} response is string length of value
+     */
 
     strlen(){ 
         return this.r('STRLEN');
@@ -312,17 +462,16 @@ export class Key {
     }
 }
 
+/**
+ * Convenience function equivalent to new Key(k) to save typing "new" over and over
+ * @param {string} k Key name
+ * @return {Object} key handler = new Key(k)
+ */
+
 export function key(k){
     return new Key(k);
 }
 
-function objectFromKVArray(A){ // eslint-disable-line no-unused-vars
-    if (A.length===0) return {};
-    const o = {};
-    for(let i=1,l=A.length;i<l;i+=2)
-        o[i-1]=i;
-    return o;
-} 
 
 export class Hash {
     constructor(k){ 

@@ -6333,8 +6333,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
      * @param {string} [o.endPoint="/"] fetch URL where webdis is listening for requests
      * @param {string} [o.credentials="same-origin"] fetch option determining whether to send http-auth or other credentials with each request
      * @param {Object} [o.headers] fetch option setting headers (e.g. accept, content-type) for each fetch.  Default sets headers for 'application/json'
-     * @param {Function(cmdAndParams:Array):string} [o.preProcess] function to determine a URL representing an array containing a redis command string and parameters
-     * @param {Function(response:Object):Object} [o.postProcess] function to transform response objects received by fetch, after transforming to JSON and dereferencing webdis object return
+     * @param {function(cmdAndParams:Array):string} [o.preProcess] function to determine a URL-like string representing an array containing a redis command string and parameters. 
+     * @param {function(response:Object):Object} [o.postProcess] function to transform response objects received by fetch, after transforming to JSON and dereferencing webdis object return
      * @return {Object} resulting configuration settings
      */
 
@@ -6392,7 +6392,7 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
     /**
      * read multiple redis keys via MGET 
      * @param {...string} redis keys to read
-     * @return {Promise<string[],Error>} a promise resolving to an array containing the read keys
+     * @return {Promise<string[],Error>} a promise resolving to an array of values
      */
 
     function mget() {
@@ -6405,17 +6405,35 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         return request(c);
     }
 
+    /**
+     * set multiple redis keys from javascript object via MSET
+     * @param {Object} obj An object whose keys and (stringified) values are to be set on the redis server 
+     * @return {Promise<Array, Error>} response is an array of [true|false, message]
+     */
+
     function mset(obj) {
         var c = asPairArray(obj);
         c.unshift('MSET');
         return request(c);
     }
 
+    /**
+     * set multiple redis keys if and only if none of the keys exist; sets all of the keys or none (via MSETNX)
+     * @param {Object} obj An object whose keys and (stringified) values are all to be set or none set.
+     * @return {Promise<number, Error>} response is 1 on success, 0 on failure
+     */
+
     function msetnx(obj) {
         var c = asPairArray(obj);
         c.unshift('MSETNX');
         return request(c);
     }
+
+    /**
+     * deletes keys on the redis server (via DEL)
+     * @param {...string} keys Keys to remove.
+     * @return {Promise<number,Error>} response is number of keys actually deleted
+     */
 
     function del() {
         for (var _len2 = arguments.length, keys = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
@@ -6427,31 +6445,49 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         return request(c);
     }
 
+    /**
+     * lists all keys or keys matching a pattern (via KEYS)
+     * @param {String} [pattern='*'] pattern to match
+     * @return {Promise<string[], Error>} response is array of keys
+     */
+
     function keysMatching() {
         var pattern = arguments.length <= 0 || arguments[0] === undefined ? '*' : arguments[0];
 
         return request(['KEYS', pattern]);
     }
 
+    /**
+     * return an existing key at random (via RANDOMKEY)
+     * @return {Promise<string, Error>} response is a key chosen at random by the server
+     */
+
     function randomKey() {
         return request(['RANDOMKEY']);
     }
+
+    /**
+     * select which redis database to use for this connection (via SELECT). Untested!
+     * @param index number of database
+     * @return {Promise<Array, Error>} status response
+     */
 
     function select(index) {
         return request(['SELECT', index]);
     }
 
+    /**
+     * Methods for manipulating a single key on the redis server 
+     */
+
+    /**
+     * Convenience function equivalent to new Key(k) to save typing "new" over and over
+     * @param {string} k Key name
+     * @return {Object} key handler = new Key(k)
+     */
+
     function key(k) {
         return new Key(k);
-    }
-
-    function objectFromKVArray(A) {
-        // eslint-disable-line no-unused-vars
-        if (A.length === 0) return {};
-        var o = {};
-        for (var i = 1, l = A.length; i < l; i += 2) {
-            o[i - 1] = i;
-        }return o;
     }
 
     function hash(k) {
@@ -6542,11 +6578,23 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
             options = _Object$assign({}, defaults);
 
             Key = (function () {
+
+                /**
+                 * Instantly create a key hander associated with a specific key, sends no requests to the server until a method is called.
+                 * Includes methods for most redis commands for "Key" and "String"
+                 * @param k Key
+                 */
+
                 function Key(k) {
                     _classCallCheck(this, Key);
 
                     this.k = k;
                 }
+
+                /**
+                 * splices key into request as 1st parameter of command
+                 * @private 
+                 */
 
                 _createClass(Key, [{
                     key: 'r',
@@ -6558,6 +6606,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                         cmdparams.splice(1, 0, this.k);
                         return request(cmdparams);
                     }
+
+                    /**
+                     * string append to the current value (via APPEND)
+                     * @params v value to append
+                     * @return {Promise<number, Error>} response is string length of new value
+                     */
+
                 }, {
                     key: 'append',
                     value: function append(v) {
@@ -6566,16 +6621,34 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                     // bitfield operations not implemented
 
+                    /**
+                     * decrement integer key value by 1 and return decremented value (via DECR)
+                     * @return {Promise<number,Error>} response is new value after subtracting 1
+                     */
+
                 }, {
                     key: 'decr',
                     value: function decr() {
                         return this.r('DECR');
                     }
+
+                    /**
+                     * decrement integer key value by integer amount and return decremented value (via DECRBY)
+                     * @param amount Amount to subtract.
+                     * @return {Promise<number,Error>} response is new value after subtracting amount
+                     */
+
                 }, {
                     key: 'decrBy',
                     value: function decrBy(amount) {
                         return this.r('DECRBY', amount);
                     }
+
+                    /**
+                     * delete key (via DEL)
+                     * @return {Promise<number,Error>} response is 1 if key deleted, 0 if non-existent
+                     */
+
                 }, {
                     key: 'del',
                     value: function del() {
@@ -6586,50 +6659,113 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                      * DUMP seems to do nothing on webdis
                      */
 
+                    /**
+                     * check key existence (via EXISTS)
+                     * @return {Promise<number,Error>} response is 1 if key exists, 0 if non-existent
+                     */
+
                 }, {
                     key: 'exists',
                     value: function exists() {
                         return this.r('EXISTS');
                     }
+
+                    /**
+                     * set a delta timer for autodeletion (via EXPIRE) Untested.
+                     * @param seconds Seconds until auto-deletion, subject to redis expiration rules
+                     * @return {Promise<number, Error>} response is 1 if timer was set, otherwise 0
+                     */
+
                 }, {
                     key: 'expire',
                     value: function expire(seconds) {
                         return this.r('EXPIRE', seconds);
                     }
+
+                    /**
+                     * set a unix timestamp for autodeletion (not a JS timestamp, needs to be divided by 1000) (EXPIREAT) Untested.
+                     * @param unixts Unix timetamp for autodeletion in seconds since Jan 1, 1970 00:00 UTC
+                     * @return {Promise<number,Error>} response is 1 if timer was set, otherwise 0
+                     */
+
                 }, {
                     key: 'expireAt',
                     value: function expireAt(unixts) {
                         return this.r('EXPIREAT', unixts);
                     }
+
+                    /**
+                     * return a substring of the current string value (via GETRANGE)
+                     * @param [starts=0] beginning index (0 is beginning)
+                     * @param [ends=-1] ending index (-1 is end of string)
+                     * @return {Promise<string, Error>} response is requested substring
+                     */
+
                 }, {
                     key: 'getRange',
-                    value: function getRange(starts, ends) {
+                    value: function getRange() {
+                        var starts = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+                        var ends = arguments.length <= 1 || arguments[1] === undefined ? -1 : arguments[1];
+
                         return this.r('GETRANGE', starts, ends);
                     }
+
+                    /**
+                     * set a new value, return the previous value (via GETSET)
+                     * @param v new value
+                     * @return {Promise<string, Error>} response is previous value
+                     */
+
                 }, {
                     key: 'getSet',
                     value: function getSet(v) {
                         return this.r('GETSET', v);
                     }
+
+                    /**
+                     * get the current value (via GET)
+                     * @return {Promise<string, Error>} response is requested value
+                     */
+
                 }, {
                     key: 'get',
                     value: function get() {
                         return this.r('GET');
                     }
+
+                    /**
+                     * add 1 to the current value and return the new value (via INCR)
+                     * @return {Promise<number, Error>} response is new value
+                     */
+
                 }, {
                     key: 'incr',
                     value: function incr() {
                         return this.r('INCR');
                     }
+
+                    /**
+                     * add integer amount to the current value and return the new value (via INCRBY)
+                     * @param {number} amount Integer amount to add
+                     * @result {Promise<number, Error>} response is new value
+                     */
+
                 }, {
                     key: 'incrBy',
-                    value: function incrBy(increment) {
-                        return this.r('INCRBY', increment);
+                    value: function incrBy(amount) {
+                        return this.r('INCRBY', amount);
                     }
+
+                    /**
+                     * add floating point amount to the curent value and return the new value (via INCRBYFLOAT)
+                     * @param {number} amount Floating point amount to add
+                     * @result {Promise<number, Error>} response is new value
+                     */
+
                 }, {
                     key: 'incrByFloat',
-                    value: function incrByFloat(increment) {
-                        return this.r('INCRBYFLOAT', increment);
+                    value: function incrByFloat(amount) {
+                        return this.r('INCRBYFLOAT', amount);
                     }
                 }, {
                     key: 'moveToDB',
@@ -6661,6 +6797,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                     value: function pTTL() {
                         return this.r('PTTL');
                     }
+
+                    /**
+                     * rename key, potentially clobbering/overwriting key at new name (via RENAME)
+                     * @param {string} newk new key
+                     * @return {Promise<Array, Error>} status response
+                     */
+
                 }, {
                     key: 'rename',
                     value: function rename(newk) {
@@ -6672,11 +6815,12 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                     // no RENAMENX
                     // need .then clause for RENAMENX to adjust this.k conditionally
 
-                }, {
-                    key: 'restore',
-                    value: function restore(ttl, sval) {
-                        return this.r('RESTORE', ttl, sval);
-                    }
+                    /**
+                     * set the value (via SET)
+                     * @param {string} v New value
+                     * @return {Promise<Array, Error>} status return
+                     */
+
                 }, {
                     key: 'set',
                     value: function set(v) {
@@ -6687,16 +6831,36 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                     value: function setEx(sec, v) {
                         return this.r('SETEX', sec, v);
                     }
+
+                    /**
+                     * set the value only if the key is undefined (via SETNX)
+                     * @param v Value to set if key is undefined
+                     * @return {Promise<number, Error>} response is 1 if they key was undefined and the new value was set, 0 if the key was defined and the new vale not set
+                     */
+
                 }, {
                     key: 'setnx',
                     value: function setnx(v) {
                         return this.r('SETNX', v);
                     }
+
+                    /** 
+                     * overwrite string value with new value beginning at character offset
+                     * @param {number} offset Offset, where 0 is beginning of string
+                     * @return {Promise<number, Error>} response is string length of new value
+                     */
+
                 }, {
                     key: 'setRange',
                     value: function setRange(offset, v) {
                         return this.r('SETRANGE', offset, v);
                     }
+
+                    /**
+                     * get string length of value
+                     * @return {Promise<number,Error>} response is string length of value
+                     */
+
                 }, {
                     key: 'strlen',
                     value: function strlen() {
@@ -7426,7 +7590,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
             });
 
             tryConfirm({
-                n: "incr t12 -40 yields 60",
+                n: "incrBy t12 -40 yields 60",
                 x: W.key("t12"),
                 i: 100,
                 f: "incrBy",
@@ -7441,7 +7605,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
             });
 
             tryConfirm({
-                n: "incr t13 2.25 yields 3.5",
+                n: "incrByFloat t13 2.25 yields 3.5",
                 x: W.key("t12"),
                 i: 1.25,
                 f: "incrByFloat",

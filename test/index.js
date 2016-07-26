@@ -265,7 +265,7 @@ tryConfirm({
 });
 
 tryConfirm({
-    n: "incr t12 -40 yields 60",
+    n: "incrBy t12 -40 yields 60",
     x: W.key("t12"),
     i: 100,
     f: "incrBy",
@@ -276,7 +276,7 @@ tryConfirm({
 });
 
 tryConfirm({
-    n: "incr t13 2.25 yields 3.5",
+    n: "incrByFloat t13 2.25 yields 3.5",
     x: W.key("t12"),
     i: 1.25,
     f: "incrByFloat",
