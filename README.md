@@ -43,7 +43,7 @@ Back-end pre-requisites:
 
 See webdis docs for a quick docker-based solution for getting a dev stack up.
 
-App code:
+Example App code:
 
 ```js
 import 'whatwg-fetch'; // polyfills window.fetch
@@ -71,9 +71,6 @@ t.set(1).then(con);
 t.get().then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 1
-t.incrBy(1).then(con);
---> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
---> VM796:1 [false, "ERR wrong number of arguments for 'incr' command"]
 t.incr().then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 2
@@ -84,12 +81,6 @@ t.incr().then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 4
 new W.keysMatching("*").then(con);
---> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
---> VM796:1 ["foo", "test123", "paul-1", "hello"]
-new W.keysMatching("").then(con);
---> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
---> VM796:1 []
-new W.keysMatching().then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 ["foo", "test123", "paul-1", "hello"]
 new W.keysMatching("*e*").then(con);
