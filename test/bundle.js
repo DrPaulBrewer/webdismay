@@ -6508,9 +6508,26 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
      * Methods for manipulating a List on the server
      */
 
+    /**
+     * convenience function equivalent to new List(k) to keep from typing "new" all the time
+     * @param k Key
+     * @return {Object} new List(k)
+     */
+
     function list(k) {
         return new List(k);
     }
+
+    /**
+     * Methods for maniplulating Set data on the webdis/redis stack.
+     * Not named Set to avoid collision with Javascript Sets 
+     */
+
+    /**
+     * Convenience function equivalent to new Rset(k), to avoid typing "new" over and over
+     * @param k Key 
+     * @return {Object} new Rset(k)
+     */
 
     function rset(k) {
         return new Rset(k);
@@ -7319,11 +7336,21 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
             _export('List', List);
 
             Rset = (function () {
+
+                /**
+                 * Instantly create a list handler associated with a specific list, via its key, sends no requests to the server until a method is called.
+                 * @param {string} k Key where a List is stored, or to be stored, on the server
+                 */
+
                 function Rset(k) {
                     _classCallCheck(this, Rset);
 
                     this.k = k;
                 }
+
+                /**
+                 * @private
+                 */
 
                 _createClass(Rset, [{
                     key: 'r',
@@ -7335,41 +7362,92 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                         cmdparams.splice(1, 0, this.k);
                         return request(cmdparams);
                     }
+
+                    /**
+                     * list members of set (via SMEMBERS)
+                     * @return {Promise<Array,Error>} response is array list of members of the set
+                     */
+
                 }, {
                     key: 'members',
                     value: function members() {
                         return this.r('SMEMBERS');
                     }
+
+                    /**
+                     * synonym for .members()
+                     * @return {Promise<Array,Error>} response is array list of members of the set
+                     */
+
                 }, {
                     key: 'keys',
                     value: function keys() {
                         return this.members();
                     }
+
+                    /**
+                     * synonym for .members()
+                     * @return {Promise<Array,Error>} response is array list of members of the set
+                     */
+
                 }, {
                     key: 'vals',
                     value: function vals() {
                         return this.members();
                     }
+
+                    /**
+                     * synonym for .members()
+                     * @return {Promise<Array,Error>} response is array list of members of the set
+                     */
+
                 }, {
                     key: 'getAll',
                     value: function getAll() {
                         return this.members();
                     }
+
+                    /**
+                     * test set membership (via SISMEMBER)
+                     * @param x value to find in the set
+                     * @return {Promise<number,Error>} response is 1 for member and 0 for not member
+                     */
+
                 }, {
                     key: 'has',
                     value: function has(x) {
                         return this.r('SISMEMBER', x);
                     }
+
+                    /**
+                     * clone of .has, tests set membership (via SISMEMBER)
+                     * @param x value to find in the set
+                     * @return {Promise<number,Error>} response is 1 for member and 0 for not member
+                     */
+
                 }, {
                     key: 'isMember',
                     value: function isMember(x) {
                         return this.has(x);
                     }
+
+                    /**
+                     * delete all members by deleting key (via DEL)
+                     * @return {Promise<number,Error>} response is 1 on deletion or 0 if the set does not exist
+                     */
+
                 }, {
                     key: 'clear',
                     value: function clear() {
                         return this.r('DEL');
                     }
+
+                    /**
+                     * add new values to the set
+                     * @param {...string} vals New values to add to set
+                     * @return {Promise<number,Error>} response is the number of additional members 
+                     */
+
                 }, {
                     key: 'add',
                     value: function add() {
@@ -7379,6 +7457,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r.apply(this, ['SADD'].concat(vals));
                     }
+
+                    /**
+                     * initialize the set to the passed values (via DEL and SADD)
+                     * @param {...string} vals Values used to initialize the set
+                     * @return {Promise<number,Error>} response is the number of unique set members
+                     */
+
                 }, {
                     key: 'set',
                     value: function set() {
@@ -7392,6 +7477,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                             return _this.add.apply(_this, vals);
                         });
                     }
+
+                    /**
+                     * remove values from the set (via SREM)
+                     * @param {...string} vals Values to remove
+                     * @return {Promise<number,Error>} response is the number removed
+                     */
+
                 }, {
                     key: 'remove',
                     value: function remove() {
@@ -7401,11 +7493,24 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r.apply(this, ['SREM'].concat(vals));
                     }
+
+                    /**
+                     * number of members (via SCARD)
+                     * @return {Promise<number,Error>} response is the number of members in the set
+                     */
+
                 }, {
                     key: 'len',
                     value: function len() {
                         return this.r('SCARD');
                     }
+
+                    /**
+                     * find the members in the current set not in any of the other sets (by key) (via SDIFF)
+                     * @param {...string} skeys Keys of other sets
+                     * @return {Promise<Array, Error>} response is an array giving the values in calculated set difference
+                     */
+
                 }, {
                     key: 'withoutSets',
                     value: function withoutSets() {
@@ -7415,11 +7520,26 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r.apply(this, ['SDIFF'].concat(skeys));
                     }
+
+                    /**
+                     * store at this key the set difference of sets at keys given by x and y (via SDIFFSTORE)
+                     * @param {string} x key for set X
+                     * @param {string} y key for set Y
+                     * @return {Promise<number,Error>} response is the number of members stored in this key's set
+                     */
+
                 }, {
                     key: 'fromDiff',
                     value: function fromDiff(x, y) {
                         return this.r('SDIFFSTORE', x, y);
                     }
+
+                    /**
+                     * find the members in the set intersection of the current set and the other listed sets (via SINTER)
+                     * @param {...string} skeys Keys of other sets for intersection
+                     * @return {Promise<Array,Error>} response is an array giving the values in the calculated set intersection
+                     */
+
                 }, {
                     key: 'intersection',
                     value: function intersection() {
@@ -7429,6 +7549,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r.apply(this, ['SINTER'].concat(skeys));
                     }
+
+                    /**
+                     * store at this key the set intersection of the listed sets (via SINTERSTORE)
+                     * @param {...skeys} skeys Keys of sets for intersection
+                     * @return {Promise<number,Error>} response is the number of members stored in this key's set
+                     */
+
                 }, {
                     key: 'fromIntersection',
                     value: function fromIntersection() {
@@ -7438,6 +7565,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r.apply(this, ['SINTERSTORE'].concat(skeys));
                     }
+
+                    /**
+                     * find the members in the set union of the current set and the other listed sets (via SUNION)
+                     * @param {...string} skeys Keys of other sets for union
+                     * @return {Promise<Array,Error>} response is an array giving the (unique) values in the calculated set union
+                     */
+
                 }, {
                     key: 'union',
                     value: function union() {
@@ -7447,6 +7581,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r.apply(this, ['SUNION'].concat(skeys));
                     }
+
+                    /**
+                     * store at this key the set union of the listed sets (via SUNIONSTORE)
+                     * @param {...skeys} skeys Keys of sets for union
+                     * @return {Promise<number,Error>} response is the number of members stored in this key's set
+                     */
+
                 }, {
                     key: 'fromUnion',
                     value: function fromUnion() {
@@ -7456,16 +7597,37 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r.apply(this, ['SUNIONSTORE'].concat(skeys));
                     }
+
+                    /**
+                     * (always) delete a member from the current set and (potentially) add it to another set (via SMOVE)
+                     * @param {string} otherSet key to destination set
+                     * @param {string} member value to move
+                     * @return {Promise<number,Error>} response is 1 if moved from source set to destination set, 0 if not a member of source set
+                     */
+
                 }, {
                     key: 'moveTo',
                     value: function moveTo(otherSet, member) {
                         return this.r('SMOVE', otherSet, member);
                     }
+
+                    /**
+                     * remove and return a random member of the set
+                     * @return {Promise<string,Error>} response is the removed member 
+                     */
+
                 }, {
                     key: 'pop',
                     value: function pop() {
                         return this.r('SPOP');
                     }
+
+                    /**
+                     * generate a random sample from the set, of any length, potentially repeating members
+                     * @param {number} count desired sample length
+                     * @return {Promise<Array,Error>} response is the requested random sample
+                     */
+
                 }, {
                     key: 'sampleWithReplacement',
                     value: function sampleWithReplacement() {
@@ -7473,6 +7635,13 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
 
                         return this.r('SRANDMEMBER', -Math.abs(count));
                     }
+
+                    /**
+                     * generate a random sample that is a subset, so that the sample has no repetition of memberss
+                     * @param {number} count desired subset length
+                     * @param {Promise<Array,Error>} response is the requested random subset
+                     */
+
                 }, {
                     key: 'sampleSubset',
                     value: function sampleSubset() {

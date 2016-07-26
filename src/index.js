@@ -810,105 +810,252 @@ export class List {
 
 }
 
+/**
+ * convenience function equivalent to new List(k) to keep from typing "new" all the time
+ * @param k Key
+ * @return {Object} new List(k)
+ */
+
 export function list(k){
     return new List(k);
 }
 
+/**
+ * Methods for maniplulating Set data on the webdis/redis stack.
+ * Not named Set to avoid collision with Javascript Sets 
+ */
+
 export class Rset {
+
+    /**
+     * Instantly create a list handler associated with a specific list, via its key, sends no requests to the server until a method is called.
+     * @param {string} k Key where a List is stored, or to be stored, on the server
+     */
     
     constructor(k){ 
         this.k = k;
     }
+
+    /**
+     * @private
+     */
 
     r(...cmdparams){
         cmdparams.splice(1,0,this.k);
         return request(cmdparams);
     }
 
+    /**
+     * list members of set (via SMEMBERS)
+     * @return {Promise<Array,Error>} response is array list of members of the set
+     */
+
     members(){
         return this.r('SMEMBERS');
     }
+
+    /**
+     * synonym for .members()
+     * @return {Promise<Array,Error>} response is array list of members of the set
+     */
 
     keys(){
         return this.members();
     }
 
+    /**
+     * synonym for .members()
+     * @return {Promise<Array,Error>} response is array list of members of the set
+     */
+
     vals(){
         return this.members();
     }
+
+    /**
+     * synonym for .members()
+     * @return {Promise<Array,Error>} response is array list of members of the set
+     */
 
     getAll(){
         return this.members();
     }
 
+    /**
+     * test set membership (via SISMEMBER)
+     * @param x value to find in the set
+     * @return {Promise<number,Error>} response is 1 for member and 0 for not member
+     */
+
     has(x){
         return this.r('SISMEMBER',x);
     }
 
+    /**
+     * clone of .has, tests set membership (via SISMEMBER)
+     * @param x value to find in the set
+     * @return {Promise<number,Error>} response is 1 for member and 0 for not member
+     */
+     
     isMember(x){
         return this.has(x);
     }
+
+    /**
+     * delete all members by deleting key (via DEL)
+     * @return {Promise<number,Error>} response is 1 on deletion or 0 if the set does not exist
+     */
     
     clear(){
         return this.r('DEL');
     }
 
+    /**
+     * add new values to the set
+     * @param {...string} vals New values to add to set
+     * @return {Promise<number,Error>} response is the number of additional members 
+     */
+
     add(...vals){
         return this.r('SADD', ...vals);
     }
 
+    /**
+     * initialize the set to the passed values (via DEL and SADD)
+     * @param {...string} vals Values used to initialize the set
+     * @return {Promise<number,Error>} response is the number of unique set members
+     */
+    
     set(...vals){
         return this.clear().then(()=>(this.add(...vals)));
     }
+
+    /**
+     * remove values from the set (via SREM)
+     * @param {...string} vals Values to remove
+     * @return {Promise<number,Error>} response is the number removed
+     */
 
     remove(...vals){
         return this.r('SREM',...vals);
     }
 
+    /**
+     * number of members (via SCARD)
+     * @return {Promise<number,Error>} response is the number of members in the set
+     */
+    
     len(){
         return this.r('SCARD');
     }
 
+    /**
+     * find the members in the current set not in any of the other sets (by key) (via SDIFF)
+     * @param {...string} skeys Keys of other sets
+     * @return {Promise<Array, Error>} response is an array giving the values in calculated set difference
+     */
+
     withoutSets(...skeys){
         return this.r('SDIFF',...skeys);
     }
-    
+
+    /**
+     * store at this key the set difference of sets at keys given by x and y (via SDIFFSTORE)
+     * @param {string} x key for set X
+     * @param {string} y key for set Y
+     * @return {Promise<number,Error>} response is the number of members stored in this key's set
+     */
+
     fromDiff(x,y){
         return this.r('SDIFFSTORE',x,y);
     }
+
+    /**
+     * find the members in the set intersection of the current set and the other listed sets (via SINTER)
+     * @param {...string} skeys Keys of other sets for intersection
+     * @return {Promise<Array,Error>} response is an array giving the values in the calculated set intersection
+     */
 
     intersection(...skeys){
         return this.r('SINTER', ...skeys);
     }
 
+    /**
+     * store at this key the set intersection of the listed sets (via SINTERSTORE)
+     * @param {...skeys} skeys Keys of sets for intersection
+     * @return {Promise<number,Error>} response is the number of members stored in this key's set
+     */
+
     fromIntersection(...skeys){
         return this.r('SINTERSTORE', ...skeys);
     }
+
+    /**
+     * find the members in the set union of the current set and the other listed sets (via SUNION)
+     * @param {...string} skeys Keys of other sets for union
+     * @return {Promise<Array,Error>} response is an array giving the (unique) values in the calculated set union
+     */
 
     union(...skeys){
         return this.r('SUNION', ...skeys);
     }
 
+    /**
+     * store at this key the set union of the listed sets (via SUNIONSTORE)
+     * @param {...skeys} skeys Keys of sets for union
+     * @return {Promise<number,Error>} response is the number of members stored in this key's set
+     */
+
     fromUnion(...skeys){
         return this.r('SUNIONSTORE', ...skeys);
     }
 
+    /**
+     * (always) delete a member from the current set and (potentially) add it to another set (via SMOVE)
+     * @param {string} otherSet key to destination set
+     * @param {string} member value to move
+     * @return {Promise<number,Error>} response is 1 if moved from source set to destination set, 0 if not a member of source set
+     */
+    
     moveTo(otherSet, member){
         return this.r('SMOVE', otherSet, member);
     }
+
+    /**
+     * remove and return a random member of the set
+     * @return {Promise<string,Error>} response is the removed member 
+     */
 
     pop(){
         return this.r('SPOP');
     }
 
+    /**
+     * generate a random sample from the set, of any length, potentially repeating members
+     * @param {number} count desired sample length
+     * @return {Promise<Array,Error>} response is the requested random sample
+     */
+
     sampleWithReplacement(count=1){
         return this.r('SRANDMEMBER', -Math.abs(count));
     }
+
+    /**
+     * generate a random sample that is a subset, so that the sample has no repetition of memberss
+     * @param {number} count desired subset length
+     * @param {Promise<Array,Error>} response is the requested random subset
+     */
 
     sampleSubset(count=1){
         return this.r('SRANDMEMBER', Math.abs(count));
     }
 }
+
+/**
+ * Convenience function equivalent to new Rset(k), to avoid typing "new" over and over
+ * @param k Key 
+ * @return {Object} new Rset(k)
+ */
 
 export function rset(k){
     return new Rset(k);

@@ -8,12 +8,16 @@ Access webdis/redis functionality and models from the browser-side via `Promises
 
 ##Status
 
-* This is an early, untested, pre-release.  
-* There is a generic request function that should return a `Promise` for data from most webdis-supported functionality.
-* Classes exist for key-based commands (Key) and key-based hashes (Hash) 
-* Currently unimplemented in any classes are sort, scan, bitwise operations, sets, sorted sets, lists, hyperloglog.
-* My time to develop this fully may be limited; I am tinkering with this primarily as a placeholder for an API.  
-* Code contributions or offers to take over this project are encouraged, file an issue to discuss.
+* This is an early release with minimal actual use in production. 
+* End-to-end testing of many javascript wrappers to webdis/redis backend functionality is perfomed, and travis-ci actually spins up webdis/redis docker containers and does over 50 tests as part for our "build passing" badge.  
+* Not all redis database functionality is present.  MULTI, for instance, does not work currently. 
+* An ES6 `Promise` is returned for all requests. There is a generic request function from which you can try any redis commands, or you can use the provided classes where functionality is reorganized.
+* Classes exist for key-based commands (Key), hashes (Hash), lists (List), and sets (Rset). 
+* The classes are organzied around more javascript-familiar idioms, so you can use .shift or .pop in List from JavaScript without translating a .shift to a redis LPOP and a .pop to a redis RPOP.  
+* Documentation explains clearly which redis command is called for each class method.
+* Currently unimplemented in any classes are sort, scan, bitwise operations, sorted sets, hyperloglog.
+* My time to develop this further is limited; I am tinkering with it primarily as a placeholder and for data storage in private tools
+* Code contributions are encouraged and will be acknowledged, but file an issue to discuss -- espeically before any massive undertaking.
 
 ##Access Control
 
@@ -29,7 +33,7 @@ To support more browsers, you may need to load this [polyfill for window.fetch](
 
 ##Programmer's documentation
 
-Not ready yet.  See source code. 
+See the [documentation for webdismay hosted at ESDoc](https://doc.esdoc.org/github.com/DrPaulBrewer/webdismay/)
 
 ##Example
 
