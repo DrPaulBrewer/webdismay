@@ -401,6 +401,47 @@ tryConfirm({
 });
 
 tryConfirm({
+    n: "incrBy t20 z 5 yields 25",
+    x: W.hash("t20"),
+    f: "incrBy",
+    params: ['z',5],
+    check: (r)=>(r===25),
+    g: "getAll",
+    confirm: (r)=>(r.z===25)
+});
+
+tryConfirm({
+    n: "incrByFloat t20 z 0.5 yields 25.5",
+    x: W.hash("t20"),
+    f: "incrByFloat",
+    params: ['z', 0.5],
+    check: (r)=>(r===25.5),
+    g: "getAll",
+    confirm: (r)=>(r.z===25.5)
+});
+
+tryConfirm({
+    n: "keys t20 should include crazy, funny, z",
+    x: W.hash("t20"),
+    f: "keys",
+    check: (r)=>(["crazy","funny","z"].every((k)=>(r.indexOf(k)>=0)))
+});
+
+tryConfirm({
+    n: "vals t20 should include 25.5, Larry, Curly",
+    x: W.hash("t20"),
+    f: "vals",
+    check: (r)=>([25.5, "Larry","Curly"].every((k)=>(r.indexOf(k)>=0)))
+});
+
+tryConfirm({
+    n: "len should equal 3",
+    x: W.hash("t20"),
+    f: "len",
+    check: (r)=>(r===3)
+});
+
+tryConfirm({
     n: "deleteAll removes t20 hash, getall returns {}",
     x: W.hash("t20"),
     f: "deleteAll",
@@ -408,4 +449,290 @@ tryConfirm({
     g: "getAll",
     confirm: (r)=>(deepEqual(r,{},true))
 });
+
+/*
+ * Lists
+ */
+
+tryConfirm({
+    n: "set t21 list to [2,7,1,8,2,8,1,8]",
+    x: W.list("t21"),
+    f: "setAll",
+    params: [2,7,1,8,2,8,1,8],
+    check: (r)=>(r===8),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[2,7,1,8,2,8,1,8],true))
+});
+
+tryConfirm({
+    n: "t21 popTo t22 yields 8, shortens t20 to 2,7,1,8,2,8,1",
+    x: W.list("t21"),
+    f: "popTo",
+    p: "t22",
+    check: (r)=>(r===8),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[2,7,1,8,2,8,1],true))
+});
+
+tryConfirm({
+    n: "t22 get 0 should yield 8",
+    x: W.list("t22"),
+    f: "get",
+    p: 0,
+    check: (r)=>(r===8)
+});
+
+tryConfirm({
+    n: "t22 pop should yield 8, empty list",
+    x: W.list("t22"),
+    f: "pop",
+    check: (r)=>(r===8),
+    g: "len",
+    confirm: (r)=>(r===0)
+});
+
+tryConfirm({
+    n: "t21 insertBefore 1, {z:6} yields 8, getall yields [2,7,{z:6},1,8,2,8,1]",
+    x: W.list("t21"),
+    f: "insertBefore",
+    params: [1, {z:6}],
+    check: (r)=>(r===8),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[2,7,{z:6},1,8,2,8,1],true))
+});
+
+tryConfirm({
+    n: "t21 insertAfter 8, 'oranges' yields 9, getall yields [2,7,{z:6},1,8,'oranges',2,8,1]",
+    x: W.list("t21"),
+    f: "insertAfter",
+    params: [8, 'oranges'],
+    check: (r)=>(r===9),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[2,7,{z:6},1,8,'oranges',2,8,1],true))
+});
+
+tryConfirm({
+    n: "t21 remove 8, removes 2 elements, getall yields [2,7,{z:6},1,'oranges',2,1]",
+    x: W.list("t21"),
+    f: "remove", 
+    p: 8,
+    check: (r)=>(r===2),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[2,7,{z:6},1,'oranges',2,1],true))
+});
+
+tryConfirm({
+    n: "t21 shift yields 2, getAll yields [7,{z:6},1,'oranges',2,1]",
+    x: W.list("t21"),
+    f: "shift",
+    check: (r)=>(r===2),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[7,{z:6},1,'oranges',2,1]))
+});
+
+tryConfirm({
+    n: "t21 unshift 99 yields 7, getAll yields [99,7,{z:6},1,'oranges',2,1]",
+    x: W.list("t21"),
+    f: "unshift",
+    p: 99,
+    check: (r)=>(r===7),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[99,7,{z:6},1,'oranges',2,1],true))
+});
+
+tryConfirm({
+    n: "t21 slice 2,3 yields [{z:6},1] and list unchanged",
+    x: W.list("t21"),
+    f: "slice",
+    params: [2,3],
+    check: (r)=>(deepEqual(r,[{z:6},1],true)),
+    g: "getAll",
+    confirm: (r)=>(deepEqual(r,[99,7,{z:6},1,'oranges',2,1],true)) 
+});
+
+tryConfirm({
+    n: "t21 trim 3,4 yields ok and list truncated to [1,'oranges']",
+    x: W.list("t21"),
+    f: "trim",
+    params: [3,4],
+    check: r0,
+    g: 'getAll',
+    confirm: (r)=>(deepEqual(r,[1,'oranges'],true))
+});
+
+/*
+ * Set
+ *
+ */
+
+tryConfirm({
+    n: "rset t30 set [2,3,5,7,7,11,13] yields 6, members yields [2,3,5,7,11,13] ",
+    x: W.rset('t30'),
+    f: "set",
+    params: [2,3,5,7,7,11,13],
+    check: (r)=>(r===6),
+    g: "members",
+    confirm: (r)=>([2,3,5,7,11,13].every((x)=>(r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "rset t30 has 6 should yield false",
+    x: W.rset('t30'),
+    f: "has",
+    p: 6,
+    check: (r)=>(r===0)
+});
+
+tryConfirm({
+    n: "rset t30 has 7 should yield true",
+    x: W.rset('t30'),
+    f: "has",
+    p: 7,
+    check: (r)=>(r===1)
+});
+
+tryConfirm({
+    n: "rset t30 remove 13 should remove 1 member",
+    x: W.rset('t30'),
+    f: "remove",
+    p: 13,
+    check: (r)=>(r===1),
+    g: "getAll",
+    confirm: (r)=>([2,3,5,7,11].every((x)=>(r.indexOf(x)>=0)))
+});
+    
+tryConfirm({
+    n: "rset t30 add 11 13 should yield 1 (only 13 new)",
+    x: W.rset('t30'),
+    f: "add",
+    params: [11,13],
+    check: (r)=>(r===1),
+    g: "getAll",
+    confirm: (r)=>([2,3,5,7,11,13].every((x)=>(r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "rset t30 len should yield 6",
+    x: W.rset('t30'),
+    f: "len",
+    check: (r)=>(r===6)
+});
+
+tryConfirm({
+    n: "rset t31 set to 5,10,15",
+    x: W.rset('t31'),
+    f: "set",
+    params: [5,10,15],
+    check: (r)=>(r===3),
+    g: "members",
+    confirm: (r)=>([5,10,15].every((x)=>(r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "rset t30 withoutSets t31 yields [2,3,7,11,13] and t30 unchanged with [2,3,5,7,11,13]",
+    x: W.rset('t30'),
+    f: "withoutSets",
+    p: "t31",
+    check: (r)=>([2,3,7,11,13].every((x)=>(r.indexOf(x)>=0))),
+    g: "members",
+    confirm: (r)=>([2,3,5,7,11,13].every((x)=>(r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "rset t32 fromDiff t30 t31 yields 5 members [2,3,7,11,13]",
+    x: W.rset('t32'),
+    f: "fromDiff",
+    params: ['t30','t31'],
+    check: (r)=>(r===5),
+    g: "members",
+    confirm: (r)=>([2,3,7,11,13].every((x)=>(r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "rset t30 intersection t31 yields [5] and t30 unchanged with [2,3,5,7,11,13]",
+    x: W.rset('t30'),
+    f: "intersection",
+    p: "t31",
+    check: (r)=>((r.length===1) && (r[0]===5)),
+    g: "members",
+    confirm: (r)=>([2,3,5,7,11,13].every((x)=>(r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "rset t33 fromIntersection t30 t31 yields 1 member [5]",
+    x: W.rset('t33'),
+    f: "fromIntersection",
+    params: ['t30','t31'],
+    check: (r)=>(r===1),
+    g: "members",
+    confirm: (r)=>( (r.length===1) && (r[0]===5) )
+});
+
+tryConfirm({
+    n: "rset t30 union t31 yields [2,3,5,7,10,11,13,15] and t30 unchanged with [2,3,5,7,11,13]",
+    x: W.rset('t30'),
+    f: "union",
+    p: "t31",
+    check: (r)=>([2,3,5,7,10,11,13,15].every((x)=>(r.indexOf(x)>=0))),
+    g: "members",
+    confirm: (r)=>([2,3,5,7,11,13].every((x)=>(r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "rset t34 fromUnion t30 t31 yields 8 members [2,3,5,7,10,11,13,15]",
+    x: W.rset('t34'),
+    f: "fromUnion",
+    params: ['t30','t31'],
+    check: (r)=>(r===8),
+    g: "members",
+    confirm: (r)=>([2,3,5,7,10,11,13,15].every((x)=>(r.indexOf(x)>=0)))
+});
+
+
+tryConfirm({
+    n: "rset t34 moveTo t33 2 yields 1, members [3,5,7,10,11,13,15]",
+    x: W.rset('t34'),
+    f: "moveTo",
+    params: ['t33',2],
+    check: (r)=>(r===1),
+    g: 'members',
+    confirm: (r)=>( (r.indexOf(2)===-1) && ([3,5,7,10,11,13,15].every((x)=>r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n:"t33 members should be [2,5]",
+    x: W.rset('t33'),
+    f: "members",
+    check: (r)=>( (r.length===2) && ([2,5].every((x)=>r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "t33 pop should be 2 or 5 leaving 1 member",
+    x: W.rset('t33'),
+    f: "pop",
+    check: (r)=>( (r===2) || (r===5) ),
+    g: "len",
+    confirm: (r)=>(r===1)
+});
+
+tryConfirm({
+    n: "t34 sampleWithReplacement 20 picks 20 items and t34 unchanged",
+    x: W.rset('t34'),
+    f: "sampleWithReplacement",
+    p: 20,
+    check: (r)=>( r.length === 20 ),
+    g: "getAll",
+    confirm: (r)=>( (r.length===7) && ([3,5,7,10,11,13,15].every((x)=>r.indexOf(x)>=0)))
+});
+
+tryConfirm({
+    n: "t34 sampleSubset 20 picks 7 items because only 7 items in set and t34 unchanged",
+    x: W.rset('t34'),
+    f: "sampleSubset",
+    p: 20,
+    check: (r)=>( (r.length===7) && ([3,5,7,10,11,13,15].every((x)=>r.indexOf(x)>=0))),
+    g: "getAll",
+    confirm: (r)=>( (r.length===7) && ([3,5,7,10,11,13,15].every((x)=>r.indexOf(x)>=0)))
+});
+
 

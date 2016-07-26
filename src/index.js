@@ -274,7 +274,7 @@ function objectFromKVArray(A){ // eslint-disable-line no-unused-vars
     if (A.length===0) return {};
     const o = {};
     for(let i=1,l=A.length;i<l;i+=2)
-	o[i-1]=i;
+        o[i-1]=i;
     return o;
 } 
 
@@ -312,27 +312,27 @@ export class Hash {
     }
 
     set(obj){ 
-	const that = this;
+        const that = this;
         return this.deleteAll().then(function(){ return that.r('HMSET',...asPairArray(obj)); });
     }
 
     update(obj){
-	return this.r('HMSET',...asPairArray(obj));
+        return this.r('HMSET',...asPairArray(obj));
     }
     
-    incrby(f,inc){
+    incrBy(f,inc){
         return this.r('HINCRBY',f,inc);
     }
 
-    incrbyfloat(f,floatInc){
+    incrByFloat(f,floatInc){
         return this.r('HINCRBYFLOAT',f,floatInc);
     }
 
-    hkeys(){ 
+    keys(){ 
         return this.r('HKEYS');
     }
 
-    hvals(){
+    vals(){
         return this.r('HVALS');
     }
 
@@ -343,4 +343,182 @@ export class Hash {
 
 export function hash(k){
     return new Hash(k);
+}
+
+
+export class List {
+    constructor(k){ 
+        this.k = k;
+    }
+
+    r(...cmdparams){
+        cmdparams.splice(1,0,this.k);
+        return request(cmdparams);
+    }
+
+    get(i){
+        return this.r('LINDEX',i);
+    }
+
+    getAll(){
+        return this.r('LRANGE',0,-1);
+    }
+
+    insertBefore(pivot,v){
+        return this.r('LINSERT','BEFORE',pivot,v);
+    }
+
+    insertAfter(pivot,...vals){
+        return this.r('LINSERT','AFTER',pivot,...vals);
+    }
+
+    len(){
+        return this.r('LLEN');
+    }
+
+    shift(){
+        return this.r('LPOP');
+    }
+
+    unshift(...values){
+        return this.r('LPUSH',...values);
+    }
+
+    slice(from=0,to=-1){
+        return this.r('LRANGE',from,to);
+    }
+
+    remove(v,count=0){
+        return this.r('LREM',count,v);
+    }
+    
+    set(i,v){
+        return this.r('LSET',i,v);
+    }
+
+    setAll(...values){
+        const that = this;
+        return del(this.k).then(()=>(that.push(...values)));
+    }
+    
+    trim(from=0,to=-1){
+        return this.r('LTRIM',from,to);
+    }
+
+    pop(){
+        return this.r('RPOP');
+    }
+
+    popTo(destination){
+        return this.r('RPOPLPUSH',destination);
+    }
+
+    push(...values){
+        return this.r('RPUSH',...values);
+    }
+
+}
+
+export function list(k){
+    return new List(k);
+}
+
+export class Rset {
+    
+    constructor(k){ 
+        this.k = k;
+    }
+
+    r(...cmdparams){
+        cmdparams.splice(1,0,this.k);
+        return request(cmdparams);
+    }
+
+    members(){
+        return this.r('SMEMBERS');
+    }
+
+    keys(){
+        return this.members();
+    }
+
+    vals(){
+        return this.members();
+    }
+
+    getAll(){
+        return this.members();
+    }
+
+    has(x){
+        return this.r('SISMEMBER',x);
+    }
+
+    isMember(x){
+        return this.has(x);
+    }
+    
+    clear(){
+        return this.r('DEL');
+    }
+
+    add(...vals){
+        return this.r('SADD', ...vals);
+    }
+
+    set(...vals){
+        return this.clear().then(()=>(this.add(...vals)));
+    }
+
+    remove(...vals){
+        return this.r('SREM',...vals);
+    }
+
+    len(){
+        return this.r('SCARD');
+    }
+
+    withoutSets(...skeys){
+        return this.r('SDIFF',...skeys);
+    }
+    
+    fromDiff(x,y){
+        return this.r('SDIFFSTORE',x,y);
+    }
+
+    intersection(...skeys){
+        return this.r('SINTER', ...skeys);
+    }
+
+    fromIntersection(...skeys){
+        return this.r('SINTERSTORE', ...skeys);
+    }
+
+    union(...skeys){
+        return this.r('SUNION', ...skeys);
+    }
+
+    fromUnion(...skeys){
+        return this.r('SUNIONSTORE', ...skeys);
+    }
+
+    moveTo(otherSet, member){
+        return this.r('SMOVE', otherSet, member);
+    }
+
+    pop(){
+        return this.r('SPOP');
+    }
+
+    sampleWithReplacement(count=1){
+        return this.r('SRANDMEMBER', -Math.abs(count));
+    }
+
+    sampleSubset(count=1){
+        return this.r('SRANDMEMBER', Math.abs(count));
+    }
+}
+
+export function rset(k){
+    return new Rset(k);
 }

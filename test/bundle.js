@@ -6278,7 +6278,7 @@ $__System.registerDynamic("3e", ["3d"], true, function($__require, exports, modu
 });
 
 $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
-    var _classCallCheck, _toConsumableArray, _Object$keys, _createClass, _Object$assign, defaults, options, Key, Hash;
+    var _classCallCheck, _toConsumableArray, _Object$keys, _createClass, _Object$assign, defaults, options, Key, Hash, List, Rset;
 
     function checkStatus(response) {
         if (response.status >= 200 && response.status < 300) return response;
@@ -6421,6 +6421,14 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         return new Hash(k);
     }
 
+    function list(k) {
+        return new List(k);
+    }
+
+    function rset(k) {
+        return new Rset(k);
+    }
+
     return {
         setters: [function (_) {
             _classCallCheck = _['default'];
@@ -6467,6 +6475,10 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
             _export('key', key);
 
             _export('hash', hash);
+
+            _export('list', list);
+
+            _export('rset', rset);
 
             defaults = {
                 method: "POST",
@@ -6720,23 +6732,23 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                         return this.r.apply(this, ['HMSET'].concat(_toConsumableArray(asPairArray(obj))));
                     }
                 }, {
-                    key: 'incrby',
-                    value: function incrby(f, inc) {
+                    key: 'incrBy',
+                    value: function incrBy(f, inc) {
                         return this.r('HINCRBY', f, inc);
                     }
                 }, {
-                    key: 'incrbyfloat',
-                    value: function incrbyfloat(f, floatInc) {
+                    key: 'incrByFloat',
+                    value: function incrByFloat(f, floatInc) {
                         return this.r('HINCRBYFLOAT', f, floatInc);
                     }
                 }, {
-                    key: 'hkeys',
-                    value: function hkeys() {
+                    key: 'keys',
+                    value: function keys() {
                         return this.r('HKEYS');
                     }
                 }, {
-                    key: 'hvals',
-                    value: function hvals() {
+                    key: 'vals',
+                    value: function vals() {
                         return this.r('HVALS');
                     }
                 }, {
@@ -6750,6 +6762,301 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
             })();
 
             _export('Hash', Hash);
+
+            List = (function () {
+                function List(k) {
+                    _classCallCheck(this, List);
+
+                    this.k = k;
+                }
+
+                _createClass(List, [{
+                    key: 'r',
+                    value: function r() {
+                        for (var _len5 = arguments.length, cmdparams = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                            cmdparams[_key5] = arguments[_key5];
+                        }
+
+                        cmdparams.splice(1, 0, this.k);
+                        return request(cmdparams);
+                    }
+                }, {
+                    key: 'get',
+                    value: function get(i) {
+                        return this.r('LINDEX', i);
+                    }
+                }, {
+                    key: 'getAll',
+                    value: function getAll() {
+                        return this.r('LRANGE', 0, -1);
+                    }
+                }, {
+                    key: 'insertBefore',
+                    value: function insertBefore(pivot, v) {
+                        return this.r('LINSERT', 'BEFORE', pivot, v);
+                    }
+                }, {
+                    key: 'insertAfter',
+                    value: function insertAfter(pivot) {
+                        for (var _len6 = arguments.length, vals = Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
+                            vals[_key6 - 1] = arguments[_key6];
+                        }
+
+                        return this.r.apply(this, ['LINSERT', 'AFTER', pivot].concat(vals));
+                    }
+                }, {
+                    key: 'len',
+                    value: function len() {
+                        return this.r('LLEN');
+                    }
+                }, {
+                    key: 'shift',
+                    value: function shift() {
+                        return this.r('LPOP');
+                    }
+                }, {
+                    key: 'unshift',
+                    value: function unshift() {
+                        for (var _len7 = arguments.length, values = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                            values[_key7] = arguments[_key7];
+                        }
+
+                        return this.r.apply(this, ['LPUSH'].concat(values));
+                    }
+                }, {
+                    key: 'slice',
+                    value: function slice() {
+                        var from = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+                        var to = arguments.length <= 1 || arguments[1] === undefined ? -1 : arguments[1];
+
+                        return this.r('LRANGE', from, to);
+                    }
+                }, {
+                    key: 'remove',
+                    value: function remove(v) {
+                        var count = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+
+                        return this.r('LREM', count, v);
+                    }
+                }, {
+                    key: 'set',
+                    value: function set(i, v) {
+                        return this.r('LSET', i, v);
+                    }
+                }, {
+                    key: 'setAll',
+                    value: function setAll() {
+                        for (var _len8 = arguments.length, values = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                            values[_key8] = arguments[_key8];
+                        }
+
+                        var that = this;
+                        return del(this.k).then(function () {
+                            return that.push.apply(that, values);
+                        });
+                    }
+                }, {
+                    key: 'trim',
+                    value: function trim() {
+                        var from = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+                        var to = arguments.length <= 1 || arguments[1] === undefined ? -1 : arguments[1];
+
+                        return this.r('LTRIM', from, to);
+                    }
+                }, {
+                    key: 'pop',
+                    value: function pop() {
+                        return this.r('RPOP');
+                    }
+                }, {
+                    key: 'popTo',
+                    value: function popTo(destination) {
+                        return this.r('RPOPLPUSH', destination);
+                    }
+                }, {
+                    key: 'push',
+                    value: function push() {
+                        for (var _len9 = arguments.length, values = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+                            values[_key9] = arguments[_key9];
+                        }
+
+                        return this.r.apply(this, ['RPUSH'].concat(values));
+                    }
+                }]);
+
+                return List;
+            })();
+
+            _export('List', List);
+
+            Rset = (function () {
+                function Rset(k) {
+                    _classCallCheck(this, Rset);
+
+                    this.k = k;
+                }
+
+                _createClass(Rset, [{
+                    key: 'r',
+                    value: function r() {
+                        for (var _len10 = arguments.length, cmdparams = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+                            cmdparams[_key10] = arguments[_key10];
+                        }
+
+                        cmdparams.splice(1, 0, this.k);
+                        return request(cmdparams);
+                    }
+                }, {
+                    key: 'members',
+                    value: function members() {
+                        return this.r('SMEMBERS');
+                    }
+                }, {
+                    key: 'keys',
+                    value: function keys() {
+                        return this.members();
+                    }
+                }, {
+                    key: 'vals',
+                    value: function vals() {
+                        return this.members();
+                    }
+                }, {
+                    key: 'getAll',
+                    value: function getAll() {
+                        return this.members();
+                    }
+                }, {
+                    key: 'has',
+                    value: function has(x) {
+                        return this.r('SISMEMBER', x);
+                    }
+                }, {
+                    key: 'isMember',
+                    value: function isMember(x) {
+                        return this.has(x);
+                    }
+                }, {
+                    key: 'clear',
+                    value: function clear() {
+                        return this.r('DEL');
+                    }
+                }, {
+                    key: 'add',
+                    value: function add() {
+                        for (var _len11 = arguments.length, vals = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+                            vals[_key11] = arguments[_key11];
+                        }
+
+                        return this.r.apply(this, ['SADD'].concat(vals));
+                    }
+                }, {
+                    key: 'set',
+                    value: function set() {
+                        var _this = this;
+
+                        for (var _len12 = arguments.length, vals = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+                            vals[_key12] = arguments[_key12];
+                        }
+
+                        return this.clear().then(function () {
+                            return _this.add.apply(_this, vals);
+                        });
+                    }
+                }, {
+                    key: 'remove',
+                    value: function remove() {
+                        for (var _len13 = arguments.length, vals = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+                            vals[_key13] = arguments[_key13];
+                        }
+
+                        return this.r.apply(this, ['SREM'].concat(vals));
+                    }
+                }, {
+                    key: 'len',
+                    value: function len() {
+                        return this.r('SCARD');
+                    }
+                }, {
+                    key: 'withoutSets',
+                    value: function withoutSets() {
+                        for (var _len14 = arguments.length, skeys = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+                            skeys[_key14] = arguments[_key14];
+                        }
+
+                        return this.r.apply(this, ['SDIFF'].concat(skeys));
+                    }
+                }, {
+                    key: 'fromDiff',
+                    value: function fromDiff(x, y) {
+                        return this.r('SDIFFSTORE', x, y);
+                    }
+                }, {
+                    key: 'intersection',
+                    value: function intersection() {
+                        for (var _len15 = arguments.length, skeys = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+                            skeys[_key15] = arguments[_key15];
+                        }
+
+                        return this.r.apply(this, ['SINTER'].concat(skeys));
+                    }
+                }, {
+                    key: 'fromIntersection',
+                    value: function fromIntersection() {
+                        for (var _len16 = arguments.length, skeys = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+                            skeys[_key16] = arguments[_key16];
+                        }
+
+                        return this.r.apply(this, ['SINTERSTORE'].concat(skeys));
+                    }
+                }, {
+                    key: 'union',
+                    value: function union() {
+                        for (var _len17 = arguments.length, skeys = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+                            skeys[_key17] = arguments[_key17];
+                        }
+
+                        return this.r.apply(this, ['SUNION'].concat(skeys));
+                    }
+                }, {
+                    key: 'fromUnion',
+                    value: function fromUnion() {
+                        for (var _len18 = arguments.length, skeys = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
+                            skeys[_key18] = arguments[_key18];
+                        }
+
+                        return this.r.apply(this, ['SUNIONSTORE'].concat(skeys));
+                    }
+                }, {
+                    key: 'moveTo',
+                    value: function moveTo(otherSet, member) {
+                        return this.r('SMOVE', otherSet, member);
+                    }
+                }, {
+                    key: 'pop',
+                    value: function pop() {
+                        return this.r('SPOP');
+                    }
+                }, {
+                    key: 'sampleWithReplacement',
+                    value: function sampleWithReplacement() {
+                        var count = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+
+                        return this.r('SRANDMEMBER', -Math.abs(count));
+                    }
+                }, {
+                    key: 'sampleSubset',
+                    value: function sampleSubset() {
+                        var count = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+
+                        return this.r('SRANDMEMBER', Math.abs(count));
+                    }
+                }]);
+
+                return Rset;
+            })();
+
+            _export('Rset', Rset);
         }
     };
 });
@@ -7237,6 +7544,65 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
             });
 
             tryConfirm({
+                n: "incrBy t20 z 5 yields 25",
+                x: W.hash("t20"),
+                f: "incrBy",
+                params: ['z', 5],
+                check: function check(r) {
+                    return r === 25;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return r.z === 25;
+                }
+            });
+
+            tryConfirm({
+                n: "incrByFloat t20 z 0.5 yields 25.5",
+                x: W.hash("t20"),
+                f: "incrByFloat",
+                params: ['z', 0.5],
+                check: function check(r) {
+                    return r === 25.5;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return r.z === 25.5;
+                }
+            });
+
+            tryConfirm({
+                n: "keys t20 should include crazy, funny, z",
+                x: W.hash("t20"),
+                f: "keys",
+                check: function check(r) {
+                    return ["crazy", "funny", "z"].every(function (k) {
+                        return r.indexOf(k) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "vals t20 should include 25.5, Larry, Curly",
+                x: W.hash("t20"),
+                f: "vals",
+                check: function check(r) {
+                    return [25.5, "Larry", "Curly"].every(function (k) {
+                        return r.indexOf(k) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "len should equal 3",
+                x: W.hash("t20"),
+                f: "len",
+                check: function check(r) {
+                    return r === 3;
+                }
+            });
+
+            tryConfirm({
                 n: "deleteAll removes t20 hash, getall returns {}",
                 x: W.hash("t20"),
                 f: "deleteAll",
@@ -7246,6 +7612,426 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
                 g: "getAll",
                 confirm: function confirm(r) {
                     return deepEqual(r, {}, true);
+                }
+            });
+
+            /*
+             * Lists
+             */
+
+            tryConfirm({
+                n: "set t21 list to [2,7,1,8,2,8,1,8]",
+                x: W.list("t21"),
+                f: "setAll",
+                params: [2, 7, 1, 8, 2, 8, 1, 8],
+                check: function check(r) {
+                    return r === 8;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [2, 7, 1, 8, 2, 8, 1, 8], true);
+                }
+            });
+
+            tryConfirm({
+                n: "t21 popTo t22 yields 8, shortens t20 to 2,7,1,8,2,8,1",
+                x: W.list("t21"),
+                f: "popTo",
+                p: "t22",
+                check: function check(r) {
+                    return r === 8;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [2, 7, 1, 8, 2, 8, 1], true);
+                }
+            });
+
+            tryConfirm({
+                n: "t22 get 0 should yield 8",
+                x: W.list("t22"),
+                f: "get",
+                p: 0,
+                check: function check(r) {
+                    return r === 8;
+                }
+            });
+
+            tryConfirm({
+                n: "t22 pop should yield 8, empty list",
+                x: W.list("t22"),
+                f: "pop",
+                check: function check(r) {
+                    return r === 8;
+                },
+                g: "len",
+                confirm: function confirm(r) {
+                    return r === 0;
+                }
+            });
+
+            tryConfirm({
+                n: "t21 insertBefore 1, {z:6} yields 8, getall yields [2,7,{z:6},1,8,2,8,1]",
+                x: W.list("t21"),
+                f: "insertBefore",
+                params: [1, { z: 6 }],
+                check: function check(r) {
+                    return r === 8;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [2, 7, { z: 6 }, 1, 8, 2, 8, 1], true);
+                }
+            });
+
+            tryConfirm({
+                n: "t21 insertAfter 8, 'oranges' yields 9, getall yields [2,7,{z:6},1,8,'oranges',2,8,1]",
+                x: W.list("t21"),
+                f: "insertAfter",
+                params: [8, 'oranges'],
+                check: function check(r) {
+                    return r === 9;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [2, 7, { z: 6 }, 1, 8, 'oranges', 2, 8, 1], true);
+                }
+            });
+
+            tryConfirm({
+                n: "t21 remove 8, removes 2 elements, getall yields [2,7,{z:6},1,'oranges',2,1]",
+                x: W.list("t21"),
+                f: "remove",
+                p: 8,
+                check: function check(r) {
+                    return r === 2;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [2, 7, { z: 6 }, 1, 'oranges', 2, 1], true);
+                }
+            });
+
+            tryConfirm({
+                n: "t21 shift yields 2, getAll yields [7,{z:6},1,'oranges',2,1]",
+                x: W.list("t21"),
+                f: "shift",
+                check: function check(r) {
+                    return r === 2;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [7, { z: 6 }, 1, 'oranges', 2, 1]);
+                }
+            });
+
+            tryConfirm({
+                n: "t21 unshift 99 yields 7, getAll yields [99,7,{z:6},1,'oranges',2,1]",
+                x: W.list("t21"),
+                f: "unshift",
+                p: 99,
+                check: function check(r) {
+                    return r === 7;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [99, 7, { z: 6 }, 1, 'oranges', 2, 1], true);
+                }
+            });
+
+            tryConfirm({
+                n: "t21 slice 2,3 yields [{z:6},1] and list unchanged",
+                x: W.list("t21"),
+                f: "slice",
+                params: [2, 3],
+                check: function check(r) {
+                    return deepEqual(r, [{ z: 6 }, 1], true);
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return deepEqual(r, [99, 7, { z: 6 }, 1, 'oranges', 2, 1], true);
+                }
+            });
+
+            tryConfirm({
+                n: "t21 trim 3,4 yields ok and list truncated to [1,'oranges']",
+                x: W.list("t21"),
+                f: "trim",
+                params: [3, 4],
+                check: r0,
+                g: 'getAll',
+                confirm: function confirm(r) {
+                    return deepEqual(r, [1, 'oranges'], true);
+                }
+            });
+
+            /*
+             * Set
+             *
+             */
+
+            tryConfirm({
+                n: "rset t30 set [2,3,5,7,7,11,13] yields 6, members yields [2,3,5,7,11,13] ",
+                x: W.rset('t30'),
+                f: "set",
+                params: [2, 3, 5, 7, 7, 11, 13],
+                check: function check(r) {
+                    return r === 6;
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return [2, 3, 5, 7, 11, 13].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 has 6 should yield false",
+                x: W.rset('t30'),
+                f: "has",
+                p: 6,
+                check: function check(r) {
+                    return r === 0;
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 has 7 should yield true",
+                x: W.rset('t30'),
+                f: "has",
+                p: 7,
+                check: function check(r) {
+                    return r === 1;
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 remove 13 should remove 1 member",
+                x: W.rset('t30'),
+                f: "remove",
+                p: 13,
+                check: function check(r) {
+                    return r === 1;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return [2, 3, 5, 7, 11].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 add 11 13 should yield 1 (only 13 new)",
+                x: W.rset('t30'),
+                f: "add",
+                params: [11, 13],
+                check: function check(r) {
+                    return r === 1;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return [2, 3, 5, 7, 11, 13].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 len should yield 6",
+                x: W.rset('t30'),
+                f: "len",
+                check: function check(r) {
+                    return r === 6;
+                }
+            });
+
+            tryConfirm({
+                n: "rset t31 set to 5,10,15",
+                x: W.rset('t31'),
+                f: "set",
+                params: [5, 10, 15],
+                check: function check(r) {
+                    return r === 3;
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return [5, 10, 15].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 withoutSets t31 yields [2,3,7,11,13] and t30 unchanged with [2,3,5,7,11,13]",
+                x: W.rset('t30'),
+                f: "withoutSets",
+                p: "t31",
+                check: function check(r) {
+                    return [2, 3, 7, 11, 13].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return [2, 3, 5, 7, 11, 13].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t32 fromDiff t30 t31 yields 5 members [2,3,7,11,13]",
+                x: W.rset('t32'),
+                f: "fromDiff",
+                params: ['t30', 't31'],
+                check: function check(r) {
+                    return r === 5;
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return [2, 3, 7, 11, 13].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 intersection t31 yields [5] and t30 unchanged with [2,3,5,7,11,13]",
+                x: W.rset('t30'),
+                f: "intersection",
+                p: "t31",
+                check: function check(r) {
+                    return r.length === 1 && r[0] === 5;
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return [2, 3, 5, 7, 11, 13].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t33 fromIntersection t30 t31 yields 1 member [5]",
+                x: W.rset('t33'),
+                f: "fromIntersection",
+                params: ['t30', 't31'],
+                check: function check(r) {
+                    return r === 1;
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return r.length === 1 && r[0] === 5;
+                }
+            });
+
+            tryConfirm({
+                n: "rset t30 union t31 yields [2,3,5,7,10,11,13,15] and t30 unchanged with [2,3,5,7,11,13]",
+                x: W.rset('t30'),
+                f: "union",
+                p: "t31",
+                check: function check(r) {
+                    return [2, 3, 5, 7, 10, 11, 13, 15].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return [2, 3, 5, 7, 11, 13].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t34 fromUnion t30 t31 yields 8 members [2,3,5,7,10,11,13,15]",
+                x: W.rset('t34'),
+                f: "fromUnion",
+                params: ['t30', 't31'],
+                check: function check(r) {
+                    return r === 8;
+                },
+                g: "members",
+                confirm: function confirm(r) {
+                    return [2, 3, 5, 7, 10, 11, 13, 15].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "rset t34 moveTo t33 2 yields 1, members [3,5,7,10,11,13,15]",
+                x: W.rset('t34'),
+                f: "moveTo",
+                params: ['t33', 2],
+                check: function check(r) {
+                    return r === 1;
+                },
+                g: 'members',
+                confirm: function confirm(r) {
+                    return r.indexOf(2) === -1 && [3, 5, 7, 10, 11, 13, 15].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "t33 members should be [2,5]",
+                x: W.rset('t33'),
+                f: "members",
+                check: function check(r) {
+                    return r.length === 2 && [2, 5].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "t33 pop should be 2 or 5 leaving 1 member",
+                x: W.rset('t33'),
+                f: "pop",
+                check: function check(r) {
+                    return r === 2 || r === 5;
+                },
+                g: "len",
+                confirm: function confirm(r) {
+                    return r === 1;
+                }
+            });
+
+            tryConfirm({
+                n: "t34 sampleWithReplacement 20 picks 20 items and t34 unchanged",
+                x: W.rset('t34'),
+                f: "sampleWithReplacement",
+                p: 20,
+                check: function check(r) {
+                    return r.length === 20;
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return r.length === 7 && [3, 5, 7, 10, 11, 13, 15].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                }
+            });
+
+            tryConfirm({
+                n: "t34 sampleSubset 20 picks 7 items because only 7 items in set and t34 unchanged",
+                x: W.rset('t34'),
+                f: "sampleSubset",
+                p: 20,
+                check: function check(r) {
+                    return r.length === 7 && [3, 5, 7, 10, 11, 13, 15].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
+                },
+                g: "getAll",
+                confirm: function confirm(r) {
+                    return r.length === 7 && [3, 5, 7, 10, 11, 13, 15].every(function (x) {
+                        return r.indexOf(x) >= 0;
+                    });
                 }
             });
         }

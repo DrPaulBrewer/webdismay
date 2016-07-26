@@ -23,6 +23,8 @@ exports.randomKey = randomKey;
 exports.select = select;
 exports.key = key;
 exports.hash = hash;
+exports.list = list;
+exports.rset = rset;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -418,23 +420,23 @@ var Hash = exports.Hash = function () {
             return this.r.apply(this, ['HMSET'].concat(_toConsumableArray(asPairArray(obj))));
         }
     }, {
-        key: 'incrby',
-        value: function incrby(f, inc) {
+        key: 'incrBy',
+        value: function incrBy(f, inc) {
             return this.r('HINCRBY', f, inc);
         }
     }, {
-        key: 'incrbyfloat',
-        value: function incrbyfloat(f, floatInc) {
+        key: 'incrByFloat',
+        value: function incrByFloat(f, floatInc) {
             return this.r('HINCRBYFLOAT', f, floatInc);
         }
     }, {
-        key: 'hkeys',
-        value: function hkeys() {
+        key: 'keys',
+        value: function keys() {
             return this.r('HKEYS');
         }
     }, {
-        key: 'hvals',
-        value: function hvals() {
+        key: 'vals',
+        value: function vals() {
             return this.r('HVALS');
         }
     }, {
@@ -449,4 +451,303 @@ var Hash = exports.Hash = function () {
 
 function hash(k) {
     return new Hash(k);
+}
+
+var List = exports.List = function () {
+    function List(k) {
+        _classCallCheck(this, List);
+
+        this.k = k;
+    }
+
+    _createClass(List, [{
+        key: 'r',
+        value: function r() {
+            for (var _len5 = arguments.length, cmdparams = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                cmdparams[_key5] = arguments[_key5];
+            }
+
+            cmdparams.splice(1, 0, this.k);
+            return request(cmdparams);
+        }
+    }, {
+        key: 'get',
+        value: function get(i) {
+            return this.r('LINDEX', i);
+        }
+    }, {
+        key: 'getAll',
+        value: function getAll() {
+            return this.r('LRANGE', 0, -1);
+        }
+    }, {
+        key: 'insertBefore',
+        value: function insertBefore(pivot, v) {
+            return this.r('LINSERT', 'BEFORE', pivot, v);
+        }
+    }, {
+        key: 'insertAfter',
+        value: function insertAfter(pivot) {
+            for (var _len6 = arguments.length, vals = Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
+                vals[_key6 - 1] = arguments[_key6];
+            }
+
+            return this.r.apply(this, ['LINSERT', 'AFTER', pivot].concat(vals));
+        }
+    }, {
+        key: 'len',
+        value: function len() {
+            return this.r('LLEN');
+        }
+    }, {
+        key: 'shift',
+        value: function shift() {
+            return this.r('LPOP');
+        }
+    }, {
+        key: 'unshift',
+        value: function unshift() {
+            for (var _len7 = arguments.length, values = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                values[_key7] = arguments[_key7];
+            }
+
+            return this.r.apply(this, ['LPUSH'].concat(values));
+        }
+    }, {
+        key: 'slice',
+        value: function slice() {
+            var from = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+            var to = arguments.length <= 1 || arguments[1] === undefined ? -1 : arguments[1];
+
+            return this.r('LRANGE', from, to);
+        }
+    }, {
+        key: 'remove',
+        value: function remove(v) {
+            var count = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+
+            return this.r('LREM', count, v);
+        }
+    }, {
+        key: 'set',
+        value: function set(i, v) {
+            return this.r('LSET', i, v);
+        }
+    }, {
+        key: 'setAll',
+        value: function setAll() {
+            for (var _len8 = arguments.length, values = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                values[_key8] = arguments[_key8];
+            }
+
+            var that = this;
+            return del(this.k).then(function () {
+                return that.push.apply(that, values);
+            });
+        }
+    }, {
+        key: 'trim',
+        value: function trim() {
+            var from = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+            var to = arguments.length <= 1 || arguments[1] === undefined ? -1 : arguments[1];
+
+            return this.r('LTRIM', from, to);
+        }
+    }, {
+        key: 'pop',
+        value: function pop() {
+            return this.r('RPOP');
+        }
+    }, {
+        key: 'popTo',
+        value: function popTo(destination) {
+            return this.r('RPOPLPUSH', destination);
+        }
+    }, {
+        key: 'push',
+        value: function push() {
+            for (var _len9 = arguments.length, values = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+                values[_key9] = arguments[_key9];
+            }
+
+            return this.r.apply(this, ['RPUSH'].concat(values));
+        }
+    }]);
+
+    return List;
+}();
+
+function list(k) {
+    return new List(k);
+}
+
+var Rset = exports.Rset = function () {
+    function Rset(k) {
+        _classCallCheck(this, Rset);
+
+        this.k = k;
+    }
+
+    _createClass(Rset, [{
+        key: 'r',
+        value: function r() {
+            for (var _len10 = arguments.length, cmdparams = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+                cmdparams[_key10] = arguments[_key10];
+            }
+
+            cmdparams.splice(1, 0, this.k);
+            return request(cmdparams);
+        }
+    }, {
+        key: 'members',
+        value: function members() {
+            return this.r('SMEMBERS');
+        }
+    }, {
+        key: 'keys',
+        value: function keys() {
+            return this.members();
+        }
+    }, {
+        key: 'vals',
+        value: function vals() {
+            return this.members();
+        }
+    }, {
+        key: 'getAll',
+        value: function getAll() {
+            return this.members();
+        }
+    }, {
+        key: 'has',
+        value: function has(x) {
+            return this.r('SISMEMBER', x);
+        }
+    }, {
+        key: 'isMember',
+        value: function isMember(x) {
+            return this.has(x);
+        }
+    }, {
+        key: 'clear',
+        value: function clear() {
+            return this.r('DEL');
+        }
+    }, {
+        key: 'add',
+        value: function add() {
+            for (var _len11 = arguments.length, vals = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+                vals[_key11] = arguments[_key11];
+            }
+
+            return this.r.apply(this, ['SADD'].concat(vals));
+        }
+    }, {
+        key: 'set',
+        value: function set() {
+            var _this = this;
+
+            for (var _len12 = arguments.length, vals = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+                vals[_key12] = arguments[_key12];
+            }
+
+            return this.clear().then(function () {
+                return _this.add.apply(_this, vals);
+            });
+        }
+    }, {
+        key: 'remove',
+        value: function remove() {
+            for (var _len13 = arguments.length, vals = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+                vals[_key13] = arguments[_key13];
+            }
+
+            return this.r.apply(this, ['SREM'].concat(vals));
+        }
+    }, {
+        key: 'len',
+        value: function len() {
+            return this.r('SCARD');
+        }
+    }, {
+        key: 'withoutSets',
+        value: function withoutSets() {
+            for (var _len14 = arguments.length, skeys = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+                skeys[_key14] = arguments[_key14];
+            }
+
+            return this.r.apply(this, ['SDIFF'].concat(skeys));
+        }
+    }, {
+        key: 'fromDiff',
+        value: function fromDiff(x, y) {
+            return this.r('SDIFFSTORE', x, y);
+        }
+    }, {
+        key: 'intersection',
+        value: function intersection() {
+            for (var _len15 = arguments.length, skeys = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+                skeys[_key15] = arguments[_key15];
+            }
+
+            return this.r.apply(this, ['SINTER'].concat(skeys));
+        }
+    }, {
+        key: 'fromIntersection',
+        value: function fromIntersection() {
+            for (var _len16 = arguments.length, skeys = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+                skeys[_key16] = arguments[_key16];
+            }
+
+            return this.r.apply(this, ['SINTERSTORE'].concat(skeys));
+        }
+    }, {
+        key: 'union',
+        value: function union() {
+            for (var _len17 = arguments.length, skeys = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+                skeys[_key17] = arguments[_key17];
+            }
+
+            return this.r.apply(this, ['SUNION'].concat(skeys));
+        }
+    }, {
+        key: 'fromUnion',
+        value: function fromUnion() {
+            for (var _len18 = arguments.length, skeys = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
+                skeys[_key18] = arguments[_key18];
+            }
+
+            return this.r.apply(this, ['SUNIONSTORE'].concat(skeys));
+        }
+    }, {
+        key: 'moveTo',
+        value: function moveTo(otherSet, member) {
+            return this.r('SMOVE', otherSet, member);
+        }
+    }, {
+        key: 'pop',
+        value: function pop() {
+            return this.r('SPOP');
+        }
+    }, {
+        key: 'sampleWithReplacement',
+        value: function sampleWithReplacement() {
+            var count = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+
+            return this.r('SRANDMEMBER', -Math.abs(count));
+        }
+    }, {
+        key: 'sampleSubset',
+        value: function sampleSubset() {
+            var count = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+
+            return this.r('SRANDMEMBER', Math.abs(count));
+        }
+    }]);
+
+    return Rset;
+}();
+
+function rset(k) {
+    return new Rset(k);
 }
