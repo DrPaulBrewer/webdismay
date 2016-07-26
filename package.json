@@ -1,6 +1,6 @@
 {
   "name": "webdismay",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "disturbingly open browser-side library for webdis ",
   "main": "build/index.js",
   "jsnext:main": "src/index.js",
