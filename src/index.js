@@ -80,8 +80,8 @@ let options = Object.assign({}, defaults);
  * @param {string} [o.endPoint="/"] fetch URL where webdis is listening for requests
  * @param {string} [o.credentials="same-origin"] fetch option determining whether to send http-auth or other credentials with each request
  * @param {Object} [o.headers] fetch option setting headers (e.g. accept, content-type) for each fetch.  Default sets headers for 'application/json'
- * @param {Function(cmdAndParams:Array):string} [o.preProcess] function to determine a URL representing an array containing a redis command string and parameters
- * @param {Function(response:Object):Object} [o.postProcess] function to transform response objects received by fetch, after transforming to JSON and dereferencing webdis object return
+ * @param {function(cmdAndParams:Array):string} [o.preProcess] function to determine a URL representing an array containing a redis command string and parameters
+ * @param {function(response:Object):Object} [o.postProcess] function to transform response objects received by fetch, after transforming to JSON and dereferencing webdis object return
  * @return {Object} resulting configuration settings
  */
 
