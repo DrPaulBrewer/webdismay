@@ -79,24 +79,25 @@ t.incr().then(con);
 t.incr().then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 4
-new W.Generic().keysMatching("*").then(con);
+new W.keysMatching("*").then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 ["foo", "test123", "paul-1", "hello"]
-new W.Generic().keysMatching("").then(con);
+new W.keysMatching("").then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 []
-new W.Generic().keysMatching().then(con);
+new W.keysMatching().then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 ["foo", "test123", "paul-1", "hello"]
-new W.Generic().keysMatching("*e*").then(con);
+new W.keysMatching("*e*").then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM796:1 ["test123", "hello"]
 ```
 
-Automagical JSON serialization/de-serialization seems to work, but isn't 
-tested nor is there an on/off switch yet.
+Automagical JSON serialization/de-serialization done in preProcessing/postProcessing seems to work.
+It can be turned off or altered by using the `configure` function and setting your own preProcessing/postProcessing.
 
 ```
+t = W.key("t");
 t.set([{"R":"Trump"},{"D":"Clinton"}]).then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM3132:1 [true, "OK"]
@@ -120,3 +121,12 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+##Trademarks and relationship to other projects
+
+Redis[tm] is a trademark of Salvatore Sanfilippo, for database software and related products and services.
+
+Webdis is an open source project of Nicolas Favre-Felix, providing an HTTP and Websocket interface to a Redis server instance.
+
+Webdismay is not officially associated with either the redis or webdis effort and is an independent 3rd party library for sending commands from javascript to redis, through webdis, and receiving responses.
+
