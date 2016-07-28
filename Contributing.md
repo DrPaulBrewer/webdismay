@@ -41,7 +41,7 @@ Why ask on Stack Overflow?
 
 * 24 hours a day, 7 days a week they have a community of experts. 
 * Someone on Stack Overflow may take an interest in your question quickly, way before that will happen on this github site.
-* Stack Overflow has standards on what constitutes a decent question.  If your question is rejected, fix it and maybe
+* Stack Overflow has [standards on what constitutes a decent question](http://stackoverflow.com/help/how-to-ask).  If your question is rejected, fix it and maybe
 it will get answered or, even better, you will learn something that allows you to answer your own question.  
 * If a question is too broad for Stack Overflow, it is probably too broad to answer for free here, as well.
 
