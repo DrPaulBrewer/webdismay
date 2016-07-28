@@ -7658,8 +7658,158 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         }
     };
 });
-$__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
-    var _toConsumableArray, deepEqual, W, totalTs;
+$__System.registerDynamic("40", [], true, function($__require, exports, module) {
+  ;
+  var define,
+      global = this,
+      GLOBAL = this;
+  module.exports = [{
+    "title": "zi agents vs mixed agents - unlimited order books",
+    "configurations": [{
+      "buyerValues": [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49],
+      "sellerCosts": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51],
+      "L": 1,
+      "H": 200,
+      "numberOfBuyers": 10,
+      "numberOfSellers": 10,
+      "periods": 100,
+      "periodDuration": 1000,
+      "buyerRate": 0.2,
+      "sellerRate": 0.2,
+      "buyerAgentType": ["ZIAgent"],
+      "sellerAgentType": ["ZIAgent"],
+      "integer": false,
+      "keepPreviousOrders": false,
+      "ignoreBudgetConstraint": false,
+      "silent": true,
+      "version": 1,
+      "xMarket": {
+        "buySellBookLimit": 0,
+        "resetAfterEachTrade": false
+      }
+    }, {
+      "buyerValues": [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49],
+      "sellerCosts": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51],
+      "L": 1,
+      "H": 200,
+      "numberOfBuyers": 10,
+      "numberOfSellers": 10,
+      "periods": 100,
+      "periodDuration": 1000,
+      "buyerRate": 0.2,
+      "sellerRate": 0.2,
+      "buyerAgentType": ["ZIAgent", "UnitAgent", "OneupmanshipAgent", "KaplanSniperAgent"],
+      "sellerAgentType": ["ZIAgent", "UnitAgent", "OneupmanshipAgent", "KaplanSniperAgent"],
+      "integer": false,
+      "keepPreviousOrders": false,
+      "ignoreBudgetConstraint": false,
+      "silent": true,
+      "version": 1,
+      "xMarket": {
+        "buySellBookLimit": 0,
+        "resetAfterEachTrade": false
+      }
+    }]
+  }, {
+    "title": "zi agents vs mixed agents - no books - markets cleared after each trade",
+    "configurations": [{
+      "buyerValues": [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49],
+      "sellerCosts": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51],
+      "L": 1,
+      "H": 200,
+      "numberOfBuyers": 10,
+      "numberOfSellers": 10,
+      "periods": 100,
+      "periodDuration": 1000,
+      "buyerRate": 0.2,
+      "sellerRate": 0.2,
+      "buyerAgentType": ["ZIAgent"],
+      "sellerAgentType": ["ZIAgent"],
+      "integer": false,
+      "keepPreviousOrders": false,
+      "ignoreBudgetConstraint": false,
+      "silent": true,
+      "version": 1,
+      "xMarket": {
+        "buySellBookLimit": 0,
+        "resetAfterEachTrade": true
+      }
+    }, {
+      "buyerValues": [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49],
+      "sellerCosts": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51],
+      "L": 1,
+      "H": 200,
+      "numberOfBuyers": 10,
+      "numberOfSellers": 10,
+      "periods": 100,
+      "periodDuration": 1000,
+      "buyerRate": 0.2,
+      "sellerRate": 0.2,
+      "buyerAgentType": ["ZIAgent", "UnitAgent", "OneupmanshipAgent", "KaplanSniperAgent"],
+      "sellerAgentType": ["ZIAgent", "UnitAgent", "OneupmanshipAgent", "KaplanSniperAgent"],
+      "integer": false,
+      "keepPreviousOrders": false,
+      "ignoreBudgetConstraint": false,
+      "silent": true,
+      "version": 1,
+      "xMarket": {
+        "buySellBookLimit": 0,
+        "resetAfterEachTrade": true
+      }
+    }]
+  }, {
+    "title": "higher price vs lower price",
+    "configurations": [{
+      "buyerValues": [100, 95, 90, 85, 80, 75, 70, 60, 50, 40, 30, 20, 10],
+      "sellerCosts": [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+      "L": 1,
+      "H": 200,
+      "numberOfBuyers": 10,
+      "numberOfSellers": 10,
+      "periods": 100,
+      "periodDuration": 1000,
+      "buyerRate": 0.2,
+      "sellerRate": 0.2,
+      "buyerAgentType": ["ZIAgent"],
+      "sellerAgentType": ["ZIAgent"],
+      "integer": false,
+      "keepPreviousOrders": false,
+      "ignoreBudgetConstraint": false,
+      "silent": true,
+      "version": 1,
+      "xMarket": {
+        "buySellBookLimit": 0,
+        "resetAfterEachTrade": true
+      }
+    }, {
+      "buyerValues": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
+      "sellerCosts": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
+      "L": 1,
+      "H": 200,
+      "numberOfBuyers": 10,
+      "numberOfSellers": 10,
+      "periods": 100,
+      "periodDuration": 1000,
+      "buyerRate": 0.2,
+      "sellerRate": 0.2,
+      "buyerAgentType": ["ZIAgent"],
+      "sellerAgentType": ["ZIAgent"],
+      "integer": false,
+      "keepPreviousOrders": false,
+      "ignoreBudgetConstraint": false,
+      "silent": true,
+      "version": 1,
+      "xMarket": {
+        "buySellBookLimit": 0,
+        "resetAfterEachTrade": true
+      }
+    }]
+  }];
+  return module.exports;
+});
+
+$__System.register('1', ['3', '5', '7', '34', '40', 'b', '3f'], function (_export) {
+    var _toConsumableArray, longArray3, deepEqual, W, totalTs;
 
     // delete the keys from previous test run
 
@@ -7693,11 +7843,11 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
                 done();
             }
             function step3(gResult) {
-                assert.ok(confirm(gResult, p), g + ' yielded ' + JSON.stringify(gResult));
+                assert.ok(confirm(gResult, p || params), g + ' yielded ' + JSON.stringify(gResult));
                 done();
             }
             function step2(fResult) {
-                assert.ok(check(fResult, p), f + ' yielded ' + JSON.stringify(fResult));
+                assert.ok(check(fResult, p || params), f + ' yielded ' + JSON.stringify(fResult));
                 if (g) x[g]().then(step3, onError);else done();
             }
             var fparams = undefined;
@@ -7726,6 +7876,8 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
     return {
         setters: [function (_2) {}, function (_3) {}, function (_4) {}, function (_) {
             _toConsumableArray = _['default'];
+        }, function (_5) {
+            longArray3 = _5['default'];
         }, function (_b) {
             deepEqual = _b['default'];
         }, function (_f) {
@@ -8218,6 +8370,30 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
              */
 
             tryConfirm({
+                n: "set t21 list to  [ [2,7] , [1,8,3], [2,8,4,0,5], [1,8] ] ",
+                x: W.list("t21"),
+                f: "setAll",
+                params: [[2, 7], [1, 8, 3], [2, 8, 4, 0, 5], [1, 8]],
+                check: function check(r) {
+                    return r === 4;
+                },
+                g: "getAll",
+                confirm: same
+            });
+
+            tryConfirm({
+                n: "set t21 to longArray3.json array",
+                x: W.list("t21"),
+                f: "setAll",
+                params: longArray3,
+                check: function check(r) {
+                    return r === 3;
+                },
+                g: "getAll",
+                confirm: same
+            });
+
+            tryConfirm({
                 n: "set t21 list to [2,7,1,8,2,8,1,8]",
                 x: W.list("t21"),
                 f: "setAll",
@@ -8226,9 +8402,7 @@ $__System.register('1', ['3', '5', '7', '34', 'b', '3f'], function (_export) {
                     return r === 8;
                 },
                 g: "getAll",
-                confirm: function confirm(r) {
-                    return deepEqual(r, [2, 7, 1, 8, 2, 8, 1, 8], true);
-                }
+                confirm: same
             });
 
             tryConfirm({

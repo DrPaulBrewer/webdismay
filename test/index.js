@@ -7,6 +7,8 @@ import 'whatwg-fetch';
 import deepEqual from "deep-equal";
 import * as W from "../src/index.js";
 
+import longArray3 from "../test/longArray3.json!";
+
 W.configure({
     method: "GET"
 }); // there might be an issue with http-proxy and POST as run by karma test runner
@@ -34,11 +36,11 @@ function tryConfirm({n, x, i, f, p, params, check, g, confirm}){
             done();
         }
         function step3(gResult){
-            assert.ok(confirm(gResult,p), g+' yielded '+JSON.stringify(gResult));
+            assert.ok(confirm(gResult,p||params), g+' yielded '+JSON.stringify(gResult));
             done();
         }
         function step2(fResult){
-            assert.ok(check(fResult,p), f+' yielded '+JSON.stringify(fResult));
+            assert.ok(check(fResult,p||params), f+' yielded '+JSON.stringify(fResult));
             if (g)
                 x[g]().then(step3, onError);
             else
@@ -455,13 +457,34 @@ tryConfirm({
  */
 
 tryConfirm({
+    n: "set t21 list to  [ [2,7] , [1,8,3], [2,8,4,0,5], [1,8] ] ",
+    x: W.list("t21"),
+    f: "setAll",
+    params: [[2,7],[1,8,3],[2,8,4,0,5],[1,8]],
+    check: (r)=>(r===4),
+    g: "getAll",
+    confirm: same
+});
+
+
+tryConfirm({
+    n: "set t21 to longArray3.json array",
+    x: W.list("t21"),
+    f:"setAll",
+    params: longArray3,
+    check: (r)=>(r===3),
+    g: "getAll",
+    confirm: same
+});
+
+tryConfirm({
     n: "set t21 list to [2,7,1,8,2,8,1,8]",
     x: W.list("t21"),
     f: "setAll",
     params: [2,7,1,8,2,8,1,8],
     check: (r)=>(r===8),
     g: "getAll",
-    confirm: (r)=>(deepEqual(r,[2,7,1,8,2,8,1,8],true))
+    confirm: same
 });
 
 tryConfirm({
