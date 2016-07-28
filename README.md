@@ -77,7 +77,9 @@ To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-ena
                 }
         }
 
-###Example App code (ES6):
+###Simplest Example App code (ES6):
+
+Babel and jspm would be needed to transpile and package this example for most older browsers.
 
 ```js
 import 'whatwg-fetch'; // polyfills window.fetch
