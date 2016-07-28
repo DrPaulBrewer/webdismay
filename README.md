@@ -13,7 +13,7 @@ Access webdis/redis functionality and models from the browser-side via `Promises
 * Not all redis database functionality is present.  MULTI, for instance, does not work currently. 
 * An ES6 `Promise` is returned for all requests. There is a generic request function from which you can try any redis commands, or you can use the provided classes where functionality is reorganized.
 * Classes exist for key-based commands (Key), hashes (Hash), lists (List), and sets (Rset). 
-* The classes are organzied around more javascript-familiar idioms, so you can use .shift or .pop in List from JavaScript without translating a .shift to a redis LPOP and a .pop to a redis RPOP.  
+* Javascript-familiar idioms are used in these classes, so someone new to redis can use .shift or .pop in List from JavaScript without having to know the redis details, such as knowing a .shift is a redis LPOP and a .pop is a redis RPOP.  For those that are already very familiar with redis, you can use the generic `request` function to access any redis functionality available through webdis, not limited to the functionality wrapped here by webdismay. Note that the corresponding redis command for each webdismay class method is provided in the ESDOC documentation.
 * Documentation explains clearly which redis command is called for each class method.
 * Currently unimplemented in any classes are sort, scan, bitwise operations, sorted sets, hyperloglog.
 * My time to develop this further is limited; I am tinkering with it primarily as a placeholder and for data storage in private tools
