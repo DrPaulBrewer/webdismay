@@ -37,20 +37,54 @@ See the [documentation for webdismay hosted at ESDoc](https://doc.esdoc.org/gith
 
 ##Example
 
-Back-end pre-requisites: 
+###Back-end pre-requisites: 
 * redis
 * webdis
 
-See webdis docs for a quick docker-based solution for getting a dev stack up.
+###Creating a back-end quickly with Docker and Nginx reverse-proxy
 
-Example App code:
+####Docker
+
+My docker container for webdis should block most redis admin commands, such as the database deleting `FLUSHDB`, but 
+an attacker can still list all of the redis keys and delete them one at a time.
+
+    docker run -v /var/local/data:/data --name "red" -d redis redis-server --appendonly yes
+    docker run -d -p 127.0.0.1:7379:7379 --link red:redis drpaulbrewer/webdis
+
+####Nginx
+
+To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-enabled/` could include these stanzas:
+
+     upstream webdis {
+       server 127.0.0.1:7379;
+     }
+     
+     listen NNN.NNN.NNN.NNN:80;  # replace with your ip address
+        server_name your.name.com; # replace with your domain name
+        access_log "off";  # optionally turn access logs off to save disk space
+        root /path/to/your/html/files;    
+        index index.html;  
+
+
+        location / {
+                auth_basic "Login";  # only if using http basic auth
+                auth_basic_user_file path/to/http/passwd/file; # only for http basic auth
+                expires off;  # turns off expires headers
+                limit_except GET {  
+                               auth_basic "Login"; # only if using http basic auth
+                               auth_basic_user_file path/to/http/passwd/file; # only for http basic auth 
+                               proxy_pass http://webdis; # sends POST and PUT (non-GET) to webdis
+                }
+        }
+
+###Example App code (ES6):
 
 ```js
 import 'whatwg-fetch'; // polyfills window.fetch
 import * as W from 'webdismay'; // Promises interface to webdis fetch:post to "/" 
 ```
 
-Playing around with some basic functions in a chrome browser dev window:
+###Playing around with some basic functions in a chrome browser dev window:
 
 ```js
 con = (x)=>console.log(x);
