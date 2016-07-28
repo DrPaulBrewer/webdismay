@@ -59,23 +59,26 @@ To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-ena
        server 127.0.0.1:7379;
      }
      
-     listen NNN.NNN.NNN.NNN:80;  # replace with your ip address
-        server_name your.name.com; # replace with your domain name
-        access_log "off";  # optionally turn access logs off to save disk space
-        root /path/to/your/html/files;    
-        index index.html;  
-
-
-        location / {
-                auth_basic "Login";  # only if using http basic auth
-                auth_basic_user_file path/to/http/passwd/file; # only for http basic auth
-                expires off;  # turns off expires headers
-                limit_except GET {  
-                               auth_basic "Login"; # only if using http basic auth
-                               auth_basic_user_file path/to/http/passwd/file; # only for http basic auth 
-                               proxy_pass http://webdis; # sends POST and PUT (non-GET) to webdis
-                }
-        }
+     server {
+     
+         listen NNN.NNN.NNN.NNN:80;  # replace with your ip address
+            server_name your.name.com; # replace with your domain name
+            access_log "off";  # optionally turn access logs off to save disk space
+            root /path/to/your/html/files;    
+            index index.html;  
+    
+    
+            location / {
+                    auth_basic "Login";  # only if using http basic auth
+                    auth_basic_user_file path/to/http/passwd/file; # only for http basic auth
+                    expires off;  # turns off expires headers
+                    limit_except GET {  
+                                   auth_basic "Login"; # only if using http basic auth
+                                   auth_basic_user_file path/to/http/passwd/file; # only for http basic auth 
+                                   proxy_pass http://webdis; # sends POST and PUT (non-GET) to webdis
+                    }
+            }
+    }
 
 ###Simplest Example App code (ES6):
 
