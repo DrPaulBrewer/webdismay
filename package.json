@@ -1,6 +1,6 @@
 {
   "name": "webdismay",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "description": "disturbingly open browser-side library for webdis ",
   "main": "build/index.js",
   "jsnext:main": "src/index.js",
@@ -38,8 +38,7 @@
     "should": "^8.3.1",
     "whatwg-fetch": "^1.0.0"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "directories": {
     "test": "test",
     "packages": "jspm_packages"
@@ -61,8 +60,7 @@
     "directories": {
       "test": "test"
     },
-    "dependencies": {
-    },
+    "dependencies": {},
     "devDependencies": {
       "babel": "npm:babel-core@^5.8.24",
       "babel-runtime": "npm:babel-runtime@^5.8.24",
