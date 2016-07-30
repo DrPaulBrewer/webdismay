@@ -6369,7 +6369,8 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
         }
         var commandURL = options.preProcess(commandArray);
         if (requestOptions.method === "POST") requestOptions.body = commandURL;
-        var webdisPromise = requestOptions.method === "GET" ? fetch(endPoint + commandURL, requestOptions) : fetch(endPoint, requestOptions);
+        // eslint-disable-next-line no-negated-condition
+        var webdisPromise = requestOptions.method !== "POST" ? fetch(endPoint + commandURL, requestOptions) : fetch(endPoint, requestOptions);
         return webdisPromise.then(checkStatus).then(function (response) {
             return response.json();
         }).then(function (reply) {

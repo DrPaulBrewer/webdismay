@@ -119,7 +119,8 @@ export function request(commandArray, endPoint=options.endPoint){
     const commandURL = options.preProcess(commandArray);
     if (requestOptions.method === "POST") 
         requestOptions.body = commandURL;
-    const webdisPromise =  (requestOptions.method === "GET")? fetch(endPoint+commandURL, requestOptions) : fetch(endPoint,requestOptions);
+    // eslint-disable-next-line no-negated-condition
+    const webdisPromise =  (requestOptions.method !== "POST")? fetch(endPoint+commandURL, requestOptions) : fetch(endPoint,requestOptions);
     return (webdisPromise
             .then(checkStatus)
             .then((response)=>response.json())
