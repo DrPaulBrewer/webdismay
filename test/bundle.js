@@ -6354,12 +6354,20 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
     function request(commandArray) {
         var endPoint = arguments.length <= 1 || arguments[1] === undefined ? options.endPoint : arguments[1];
 
-        var commandURL = options.preProcess(commandArray);
+        if (!Array.isArray(commandArray)) return undefined;
         var requestOptions = {
             method: options.method,
             credentials: options.credentials,
             headers: options.headers
         };
+        var last = commandArray[commandArray.length - 1];
+        if (last instanceof Blob) {
+            commandArray.length -= 1;
+            requestOptions.method = "PUT";
+            requestOptions.headers = options.putHeaders;
+            requestOptions.body = last;
+        }
+        var commandURL = options.preProcess(commandArray);
         if (requestOptions.method === "POST") requestOptions.body = commandURL;
         var webdisPromise = requestOptions.method === "GET" ? fetch(endPoint + commandURL, requestOptions) : fetch(endPoint, requestOptions);
         return webdisPromise.then(checkStatus).then(function (response) {
@@ -6604,6 +6612,10 @@ $__System.register('3f', ['10', '34', '38', 'f', '3e'], function (_export) {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
+                },
+                putHeaders: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/octet-stream'
                 }
             };
             options = _Object$assign({}, defaults);

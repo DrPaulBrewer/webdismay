@@ -68,6 +68,10 @@ const defaults = {
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
+    },
+    putHeaders: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/octet-stream'
     }
 };
 
@@ -106,19 +110,21 @@ export function request(commandArray, endPoint=options.endPoint){
         headers: options.headers
     };
     const last = commandArray[commandArray.length-1];
-    if (last instanceOf(Blob)){
-	commandArray.length = commandArray.length-1;
-	requestOptions.method = "PUT";
-	requestOptions.body = last;
+    if (last instanceof Blob){
+        commandArray.length -= 1;
+        requestOptions.method = "PUT";
+        requestOptions.headers = options.putHeaders;
+        requestOptions.body = last;
+    }
     const commandURL = options.preProcess(commandArray);
     if (requestOptions.method === "POST") 
         requestOptions.body = commandURL;
     const webdisPromise =  (requestOptions.method === "GET")? fetch(endPoint+commandURL, requestOptions) : fetch(endPoint,requestOptions);
     return (webdisPromise
-	    .then(checkStatus)
-	    .then((response)=>response.json())
-	    .then((reply)=>reply[commandArray[0]])
-	    .then(options.postProcess)
+            .then(checkStatus)
+            .then((response)=>response.json())
+            .then((reply)=>reply[commandArray[0]])
+            .then(options.postProcess)
            );
 }
 
