@@ -99,20 +99,26 @@ export function configure(o){
  */
 
 export function request(commandArray, endPoint=options.endPoint){
-    const commandURL = options.preProcess(commandArray);
+    if (!(Array.isArray(commandArray))) return undefined;
     const requestOptions = {
         method: options.method,
         credentials: options.credentials,
         headers: options.headers
     };
+    const last = commandArray[commandArray.length-1];
+    if (last instanceOf(Blob)){
+	commandArray.length = commandArray.length-1;
+	requestOptions.method = "PUT";
+	requestOptions.body = last;
+    const commandURL = options.preProcess(commandArray);
     if (requestOptions.method === "POST") 
         requestOptions.body = commandURL;
     const webdisPromise =  (requestOptions.method === "GET")? fetch(endPoint+commandURL, requestOptions) : fetch(endPoint,requestOptions);
     return (webdisPromise
-            .then(checkStatus)
-            .then((response)=>response.json())
-            .then((reply)=>reply[commandArray[0]])
-            .then(options.postProcess)
+	    .then(checkStatus)
+	    .then((response)=>response.json())
+	    .then((reply)=>reply[commandArray[0]])
+	    .then(options.postProcess)
            );
 }
 
