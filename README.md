@@ -80,52 +80,6 @@ To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-ena
             }
     }
 
-###PUT and Binary blob upload
-Did you know that, given available memory, [redis can store around 512MB in a single value](http://redis.io/topics/data-types)?  
-
-This capability is also explored here, but involves a bit more complexity and uncertainity than optimal. 
-
-If you redirect HTTP `PUT /` to the back-end, webdismay will pass a PUT file upload to webdis/redis when a `Blob` is passed 
-to webdismay in Javascript as the data parameter of a `SET` or similar redis command.  Unfortunately, as of July 2016, 
-it is not entirely clean or certain.  You can set a key to the binary content of a file, but fetching the binary content back
-into the browser (or another browser) typically is truncated or otherwise does not function properly.    
-
-To export the stored binary data back out of webdis, the best results have been with
-     
-     curl http://webdis.ip.addr:port/GET/somekey.raw >somekey.ext
-     
-where `ext` is a placeholder for the correct extension for the raw binary data (i.e., zip, png, jpg), e.g.
-
-     curl http://127.0.0.1:7379/GET/upload12345.raw > upload12345.zip
-     
-Note: Without `.raw`, the binary data tends to be truncated. 
-
-Getting nginx to play along seems to depend on disabling nginx from adding a `Connection: Close` header to the upstream
-request.  Here is a configuration for attaching a webdis back end running on localhost to an internal (non-public) site
-running on the LAN at 192.168.1.10;  this can be combined with some of the http basic auth listed above for additional access
-control on a public ip.  
-
-```
-upstream webdis {
-   server 127.0.0.1:7379;
-}
-
-
-server {
-       listen 192.168.1.10:80;
-       root /var/web/192.168.1.10;
-       index index.html;
-       client_max_body_size 1000M;
-       proxy_http_version 1.1;
-       proxy_set_header Connection "";
-       location / {
-           autoindex on;
-           limit_except GET {  
-                    proxy_pass http://webdis; # sends POST and PUT (non-GET) to webdis
-                }
-       }
-}
-```
 
 ###Simplest Example App code (ES6):
 
@@ -186,6 +140,54 @@ t.get().then(con);
 --> Promise {[[PromiseStatus]]: "pending", [[PromiseValue]]: undefined}
 --> VM3132:1 [{"R":"Trump"},{"D":"Clinton"}]
 ```
+
+###PUT and Binary blob upload
+Did you know that, given available memory, [redis can store around 512MB in a single value](http://redis.io/topics/data-types)?  
+
+This capability is also explored here, but involves a bit more complexity and uncertainity than optimal. 
+
+If you redirect HTTP `PUT /` to the back-end, webdismay will pass a PUT file upload to webdis/redis when a `Blob` is passed 
+to webdismay in Javascript as the data parameter of a `SET` or similar redis command.  Unfortunately, as of July 2016, 
+it is not entirely clean or certain.  You can set a key to the binary content of a file, but fetching the binary content back
+into the browser (or another browser) typically is truncated or otherwise does not function properly.    
+
+To export the stored binary data back out of webdis, the best results have been with
+     
+     curl http://webdis.ip.addr:port/GET/somekey.raw >somekey.ext
+     
+where `ext` is a placeholder for the correct extension for the raw binary data (i.e., zip, png, jpg), e.g.
+
+     curl http://127.0.0.1:7379/GET/upload12345.raw > upload12345.zip
+     
+Note: Without `.raw`, the binary data tends to be truncated. 
+
+Getting nginx to play along seems to depend on disabling nginx from adding a `Connection: Close` header to the upstream
+request.  Here is a configuration for attaching a webdis back end running on localhost to an internal (non-public) site
+running on the LAN at 192.168.1.10;  this can be combined with some of the http basic auth listed above for additional access
+control on a public ip.  
+
+```
+upstream webdis {
+   server 127.0.0.1:7379;
+}
+
+
+server {
+       listen 192.168.1.10:80;
+       root /var/web/192.168.1.10;
+       index index.html;
+       client_max_body_size 1000M;
+       proxy_http_version 1.1;
+       proxy_set_header Connection "";
+       location / {
+           autoindex on;
+           limit_except GET {  
+                    proxy_pass http://webdis; # sends POST and PUT (non-GET) to webdis
+                }
+       }
+}
+```
+
 
 ##Copyright
 
