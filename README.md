@@ -161,8 +161,8 @@ where `ext` is a placeholder for the correct extension for the raw binary data (
      
 Note: Without `.raw`, the binary data tends to be truncated. 
 
-Getting nginx to play along seems to depend on disabling nginx from adding a `Connection: Close` header to the upstream
-request.  Here is a configuration for attaching a webdis back end running on localhost to an internal (non-public) site
+Getting nginx to play along seems to depend on disabling the `Connection: Close` header in any forwarded upstream
+requests.  Here is a configuration for attaching a webdis back end running on localhost to an internal (non-public) site
 running on the LAN at 192.168.1.10;  this can be combined with some of the http basic auth listed above for additional access
 control on a public ip.  
 
