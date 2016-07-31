@@ -82,8 +82,8 @@ To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-ena
 
 ###PUT and Binary blob upload
 
-If you redirect HTTP `PUT /` to the back-end, webdismay will pass a PUT file uploads to webdis/redis when a `Blob` is passed 
-to webdismay in Javascript as the data parameter of a `SET` or similar redis command .  Unfortunately, as of July 2016, 
+If you redirect HTTP `PUT /` to the back-end, webdismay will pass a PUT file upload to webdis/redis when a `Blob` is passed 
+to webdismay in Javascript as the data parameter of a `SET` or similar redis command.  Unfortunately, as of July 2016, 
 it is not entirely clean or certain.  You can set a key to the binary content of a file, but fetching the binary content back
 into the browser (or another browser) typically is truncated or otherwise does not function properly.    
 
