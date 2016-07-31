@@ -10,7 +10,7 @@ Access webdis/redis functionality and models from the browser-side via `Promises
 
 * This is an early release with minimal actual use in production. 
 * End-to-end testing of many javascript wrappers to webdis/redis backend functionality is perfomed, and travis-ci actually spins up webdis/redis docker containers and does over 50 tests as part for our "build passing" badge.  
-* Not all redis database functionality is present.  MULTI, for instance, does not work currently. 
+* Webdismay uses webdis, and not all redis database functionality is present in webdis.  Redis MULTI/EXEC is not supported.
 * An ES6 `Promise` is returned for all requests. There is a generic request function from which you can try any redis commands, or you can use the provided classes where functionality is reorganized.
 * Classes exist for key-based commands (Key), hashes (Hash), lists (List), and sets (Rset). 
 * Javascript-familiar idioms are used in these classes, so someone new to redis can use .shift or .pop in List from JavaScript without having to know the redis details, such as knowing a .shift is a redis LPOP and a .pop is a redis RPOP.  For those that are already very familiar with redis, you can use the generic `request` function to access any redis functionality available through webdis, not limited to the functionality wrapped here by webdismay. Note that the corresponding redis command for each webdismay class method is provided in the ESDOC documentation.
@@ -79,6 +79,48 @@ To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-ena
                     }
             }
     }
+
+###PUT and Binary blob upload
+
+If you redirect HTTP `PUT /` to the back-end, webdismay will pass a PUT file uploads to webdis/redis when a `Blob` is passed 
+to webdismay in Javascript as the data parameter of a `SET` or similar redis command .  Unfortunately, as of July 2016, 
+it is not entirely clean or certain.  You can set a key to the binary content of a file, but fetching the binary content back
+into the browser (or another browser) typically is truncated or otherwise does not function properly.    
+
+To export the stored binary data back out of webdis, the best results have been with
+     
+     curl http://webdis.ip.addr:port/GET/somekey.raw >somekey.ext
+     
+where `ext` is a placeholder for the correct extension for the raw binary data (i.e., zip, png, jpg), e.g.
+
+     curl http://127.0.0.1:7379/GET/upload12345.raw > upload12345.zip
+
+Getting nginx to play along seems to depend on disabling nginx from adding a `Connection: Close` header to the upstream
+request.  Here is a configuration for attaching a webdis back end running on localhost to an internal (non-public) site
+running on the LAN at 192.168.1.10;  this can be combined with some of the http basic auth listed above for additional access
+control on a public ip.  
+
+```
+upstream webdis {
+   server 127.0.0.1:7379;
+}
+
+
+server {
+       listen 192.168.1.10:80;
+       root /var/web/192.168.1.10;
+       index index.html;
+       client_max_body_size 1000M;
+       proxy_http_version 1.1;
+       proxy_set_header Connection "";
+       location / {
+           autoindex on;
+           limit_except GET {  
+                    proxy_pass http://webdis; # sends POST and PUT (non-GET) to webdis
+                }
+       }
+}
+```
 
 ###Simplest Example App code (ES6):
 
