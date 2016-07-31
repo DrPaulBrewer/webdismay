@@ -81,6 +81,9 @@ To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-ena
     }
 
 ###PUT and Binary blob upload
+Did you know that, given available memory, [redis can store around 512MB in a single value](http://redis.io/topics/data-types)?  
+
+This capability is also explored here, but involves a bit more complexity and uncertainity than optimal. 
 
 If you redirect HTTP `PUT /` to the back-end, webdismay will pass a PUT file upload to webdis/redis when a `Blob` is passed 
 to webdismay in Javascript as the data parameter of a `SET` or similar redis command.  Unfortunately, as of July 2016, 
@@ -94,6 +97,8 @@ To export the stored binary data back out of webdis, the best results have been 
 where `ext` is a placeholder for the correct extension for the raw binary data (i.e., zip, png, jpg), e.g.
 
      curl http://127.0.0.1:7379/GET/upload12345.raw > upload12345.zip
+     
+Note: Without `.raw`, the binary data tends to be truncated. 
 
 Getting nginx to play along seems to depend on disabling nginx from adding a `Connection: Close` header to the upstream
 request.  Here is a configuration for attaching a webdis back end running on localhost to an internal (non-public) site
