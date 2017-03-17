@@ -6,7 +6,7 @@ Disturbingly open browser-side middleware for webdis-redis stack.
 
 Access webdis/redis functionality and models from the browser-side via `Promises`
 
-##Status
+## Status
 
 * This is an early release with minimal actual use in production. 
 * End-to-end testing of many javascript wrappers to webdis/redis backend functionality is perfomed, and travis-ci actually spins up webdis/redis docker containers and does over 50 tests as part for our "build passing" badge.  
@@ -31,7 +31,7 @@ or including it in your work on other systems.
 
 To support more browsers, you may need to load this [polyfill for window.fetch](https://github.com/github/fetch) before loading this library.
 
-##Programmer's documentation
+## Programmer's documentation
 
 See the [documentation for webdismay hosted at ESDoc](https://doc.esdoc.org/github.com/DrPaulBrewer/webdismay/)
 
@@ -41,7 +41,7 @@ See the [documentation for webdismay hosted at ESDoc](https://doc.esdoc.org/gith
 * redis
 * webdis
 
-###Creating a back-end quickly with Docker and Nginx reverse-proxy
+### Creating a back-end quickly with Docker and Nginx reverse-proxy
 
 #### Docker
 
