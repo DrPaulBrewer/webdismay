@@ -19,7 +19,7 @@ Access webdis/redis functionality and models from the browser-side via `Promises
 * My time to develop this further is limited; I am tinkering with it primarily as a placeholder and for data storage in private tools
 * Code contributions are encouraged and will be acknowledged, but file an issue to discuss -- espeically before any massive undertaking.
 
-##Access Control
+## Access Control
 
 The only access controls are those provided by [webdis ACL](https://github.com/nicolasff/webdis#acl) and [redis security](http://redis.io/topics/security),
 which could be insufficient for some applications (e.g. some kinds of public facing sites,
@@ -27,7 +27,7 @@ money and e-commerce, pacemakers, nuclear weapons).  When run completely open, a
 read any data, or write or alter  any data.  You must accept all responsibility and consequences for using this software
 or including it in your work on other systems.  
 
-##window.fetch Polyfill Recommended
+## window.fetch Polyfill Recommended
 
 To support more browsers, you may need to load this [polyfill for window.fetch](https://github.com/github/fetch) before loading this library.
 
@@ -35,15 +35,15 @@ To support more browsers, you may need to load this [polyfill for window.fetch](
 
 See the [documentation for webdismay hosted at ESDoc](https://doc.esdoc.org/github.com/DrPaulBrewer/webdismay/)
 
-##Example
+## Example
 
-###Back-end pre-requisites: 
+### Back-end pre-requisites: 
 * redis
 * webdis
 
 ###Creating a back-end quickly with Docker and Nginx reverse-proxy
 
-####Docker
+#### Docker
 
 My docker container for webdis should block most redis admin commands, such as the database deleting `FLUSHDB`, but 
 an attacker can still list all of the redis keys and delete them one at a time.
@@ -51,7 +51,7 @@ an attacker can still list all of the redis keys and delete them one at a time.
     docker run -v /var/local/data:/data --name "red" -d redis redis-server --appendonly yes
     docker run -d -p 127.0.0.1:7379:7379 --link red:redis drpaulbrewer/webdis
 
-####Nginx
+#### Nginx
 
 To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-enabled/` could include these stanzas:
 
@@ -81,7 +81,7 @@ To redirect POST / to the back-end, the Nginx host file in `/etc/nginx/sites-ena
     }
 
 
-###Importing (ES6):
+### Importing (ES6):
 
 Babel and jspm would be needed to transpile and package this example for most older browsers.
 
@@ -90,7 +90,7 @@ import 'whatwg-fetch'; // polyfills window.fetch
 import * as W from 'webdismay'; // Promises interface to webdis fetch:post to "/" 
 ```
 
-###Playing around with some basic functions in a chrome browser dev window:
+### Playing around with some basic functions in a chrome browser dev window:
 
 ```js
 con = (x)=>console.log(x);
@@ -141,7 +141,7 @@ t.get().then(con);
 --> VM3132:1 [{"R":"Trump"},{"D":"Clinton"}]
 ```
 
-###PUT and Binary blob upload
+### PUT and Binary blob upload
 Did you know that, given available memory, [redis can store around 512MB in a single value](http://redis.io/topics/data-types)?  
 
 This capability is also explored here, but involves a bit more complexity and uncertainity than optimal. 
@@ -189,11 +189,11 @@ server {
 ```
 
 
-##Copyright
+## Copyright
 
 Copyright 2016 Paul Brewer, Economic and Financial Technology Consulting LLC
 
-##License
+## License
 
 The MIT License (MIT)
 
