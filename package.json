@@ -27,7 +27,7 @@
     "eslint": "^4.9.0",
     "istanbul": "^1.0.0-alpha.2",
     "jspm": "^0.16.39",
-    "karma": "^1.1.1",
+    "karma": "^2.0.0",
     "karma-cli": "^1.0.1",
     "karma-firefox-launcher": "^1.0.0",
     "karma-phantomjs-launcher": "^1.0.1",
