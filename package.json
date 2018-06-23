@@ -24,7 +24,7 @@
     "browserify": "^16.0.0",
     "coveralls": "^3.0.0",
     "esdoc": "^1.0.3",
-    "eslint": "^4.9.0",
+    "eslint": "^5.0.0",
     "istanbul": "^1.0.0-alpha.2",
     "jspm": "^0.16.39",
     "karma": "^2.0.0",
