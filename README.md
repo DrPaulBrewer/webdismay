@@ -1,7 +1,7 @@
 webdismay
 =========
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/DrPaulBrewer/webdismay.svg)](https://greenkeeper.io/)
+
 [![Build Status](https://travis-ci.org/DrPaulBrewer/webdismay.svg?branch=master)](https://travis-ci.org/DrPaulBrewer/webdismay)
 
 Disturbingly open browser-side middleware for webdis-redis stack.  
